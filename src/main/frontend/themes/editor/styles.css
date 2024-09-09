@@ -1,0 +1,9 @@
+.view {
+    padding: 1rem;
+}
+
+.text-editor {
+    width: 50%;
+    height: 90%;
+    padding: 1px;
+}
