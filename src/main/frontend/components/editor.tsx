@@ -1,6 +1,6 @@
 import { Button } from "@vaadin/react-components";
 import React, { useRef, useState, useEffect } from "react";
-import { useStompClient } from "react-stomp-hooks";
+import { useSubscription, useStompClient } from "react-stomp-hooks";
 
 enum Style {
 	BOLD,
@@ -44,31 +44,42 @@ export default function Editor() {
 	const [text, setText] = useState("");
 	const stompClient = useStompClient();
 
+
+	useSubscription("/broadcasts/test", (message) => {
+		console.info("new broadcast: " + message.body);
+		if (editorRef.current) {
+			editorRef.current.value = message.body
+		} else {
+			console.warn("editorRef.current is NULL!");
+		}
+	});
+
 	const editor = (
 		<textarea
 			ref={editorRef}
 			className="text-editor"
 			onChange={async (event) => {
 				setText(event.target.value);
-
-				if (!stompClient) {
-					console.log('no stomp client');
-					return;
-				}
-
-				const content: string = JSON.stringify({
-					content: event.target.value
-				});
-				console.log(content)
-
-				stompClient.publish({
-					destination: '/app/test',
-					body: content
-				});
-				console.log('sent message: ' + content);
+				sendTextToServer(event.target.value);
 			}}
 		/>
 	)
+
+	const sendTextToServer = (text: string) => {
+		if (!stompClient) {
+			console.warn('no stomp client');
+			return;
+		}
+
+		const content: string = JSON.stringify({
+			content: text
+		});
+
+		stompClient.publish({
+			destination: '/app/test',
+			body: content
+		});
+	}
 
 	const wrapSelection = (style: Style) => () => {
 		if (!editorRef.current) return;
