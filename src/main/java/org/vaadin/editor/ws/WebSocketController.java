@@ -11,7 +11,7 @@ import org.vaadin.editor.presence.PresenceManager;
 public class WebSocketController {
 
 	@MessageMapping("/test")
-	@SendTo("/broadcasts/test")
+	@SendTo("/broadcasts/test")	// anything returned will be broadcast to this endpoint
 	public String test(TextMessage text) throws Exception {
 		String content = text.getContent();
 
@@ -19,6 +19,6 @@ public class WebSocketController {
 
 		System.out.println(PresenceManager.getGlobalText());
 
-		return content;
+		return content;	// broadcast to /broadcasts/test
 	}
 }
