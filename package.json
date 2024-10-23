@@ -4,6 +4,7 @@
   "type": "module",
   "dependencies": {
     "@polymer/polymer": "3.5.1",
+    "@stomp/stompjs": "^7.0.0",
     "@vaadin/bundles": "24.4.7",
     "@vaadin/common-frontend": "0.0.19",
     "@vaadin/hilla-file-router": "24.4.7",
@@ -30,7 +31,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-router-dom": "6.26.1",
-    "react-use-websocket": "^4.10.0"
+    "react-stomp-hooks": "^3.0.1"
   },
   "devDependencies": {
     "@babel/preset-react": "7.24.7",
@@ -120,7 +121,7 @@
       "workbox-core": "7.1.0",
       "workbox-precaching": "7.1.0"
     },
-    "hash": "8bc77c3d17e51f76a12e3650ba3874873159bf75d72eb83be13cbc9f615bd982"
+    "hash": "9e80c54ea96de90e793cc1565881130e938122714501467588abf21ecb608772"
   },
   "overrides": {
     "@vaadin/bundles": "$@vaadin/bundles",
@@ -161,6 +162,7 @@
     "@vaadin/vaadin-themable-mixin": "$@vaadin/vaadin-themable-mixin",
     "@vaadin/vaadin-lumo-styles": "$@vaadin/vaadin-lumo-styles",
     "@vaadin/vaadin-material-styles": "$@vaadin/vaadin-material-styles",
-    "react-use-websocket": "$react-use-websocket"
+    "react-stomp-hooks": "$react-stomp-hooks",
+    "@stomp/stompjs": "$@stomp/stompjs"
   }
 }
