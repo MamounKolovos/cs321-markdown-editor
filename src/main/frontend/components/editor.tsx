@@ -1,6 +1,6 @@
 import { Button } from "@vaadin/react-components";
 import React, { useRef, useState, useEffect } from "react";
-import useWebSocket from "react-use-websocket";
+import { useStompClient } from "react-stomp-hooks";
 
 enum Style {
 	BOLD,
@@ -42,11 +42,7 @@ const charLimit = 500;
 export default function Editor() {
 	const editorRef = useRef<HTMLTextAreaElement>(null);
 	const [text, setText] = useState("");
-
-	const WEBSOCKET_URL = 'ws://127.0.0.1:3456'
-	const wsConnect = useWebSocket(WEBSOCKET_URL, {
-		queryParams: { text }
-	});
+	const stompClient = useStompClient();
 
 	const editor = (
 		<textarea
