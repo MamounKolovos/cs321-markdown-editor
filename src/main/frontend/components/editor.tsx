@@ -50,6 +50,22 @@ export default function Editor() {
 			className="text-editor"
 			onChange={async (event) => {
 				setText(event.target.value);
+
+				if (!stompClient) {
+					console.log('no stomp client');
+					return;
+				}
+
+				const content: string = JSON.stringify({
+					content: event.target.value
+				});
+				console.log(content)
+
+				stompClient.publish({
+					destination: '/app/test',
+					body: content
+				});
+				console.log('sent message: ' + content);
 			}}
 		/>
 	)
