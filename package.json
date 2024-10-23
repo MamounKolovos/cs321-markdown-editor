@@ -29,7 +29,8 @@
     "proj4": "2.11.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "react-router-dom": "6.26.1"
+    "react-router-dom": "6.26.1",
+    "react-use-websocket": "^4.10.0"
   },
   "devDependencies": {
     "@babel/preset-react": "7.24.7",
@@ -119,7 +120,7 @@
       "workbox-core": "7.1.0",
       "workbox-precaching": "7.1.0"
     },
-    "hash": "112efdc120bf9146f6cb51b293805fe5cb300c2d06f61881d311a438a8db9ce3"
+    "hash": "8bc77c3d17e51f76a12e3650ba3874873159bf75d72eb83be13cbc9f615bd982"
   },
   "overrides": {
     "@vaadin/bundles": "$@vaadin/bundles",
@@ -159,6 +160,7 @@
     "@vaadin/react-components-pro": "$@vaadin/react-components-pro",
     "@vaadin/vaadin-themable-mixin": "$@vaadin/vaadin-themable-mixin",
     "@vaadin/vaadin-lumo-styles": "$@vaadin/vaadin-lumo-styles",
-    "@vaadin/vaadin-material-styles": "$@vaadin/vaadin-material-styles"
+    "@vaadin/vaadin-material-styles": "$@vaadin/vaadin-material-styles",
+    "react-use-websocket": "$react-use-websocket"
   }
 }
