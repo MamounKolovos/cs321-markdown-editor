@@ -1,5 +1,6 @@
 import { Button } from "@vaadin/react-components";
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import useWebSocket from "react-use-websocket";
 
 enum Style {
 	BOLD,
@@ -40,11 +41,20 @@ const StyleDefs: Record<Style, StyleDef> = {
 const charLimit = 500;
 export default function Editor() {
 	const editorRef = useRef<HTMLTextAreaElement>(null);
+	const [text, setText] = useState("");
+
+	const WEBSOCKET_URL = 'ws://127.0.0.1:3456'
+	const wsConnect = useWebSocket(WEBSOCKET_URL, {
+		queryParams: { text }
+	});
 
 	const editor = (
 		<textarea
 			ref={editorRef}
 			className="text-editor"
+			onChange={async (event) => {
+				setText(event.target.value);
+			}}
 		/>
 	)
 
