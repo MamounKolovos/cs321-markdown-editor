@@ -11,10 +11,18 @@ import {
   createMenuItems,
   useViewConfig,
 } from "@vaadin/hilla-file-router/runtime.js";
-import {Suspense, useEffect} from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Signal, signal, effect } from '@vaadin/hilla-react-signals';
+import { Signal, signal, effect } from "@vaadin/hilla-react-signals";
 import Editor from "Frontend/components/editor";
+
+import {
+  StompSessionProvider,
+  useStompClient,
+  useSubscription,
+  withStompClient,
+  withSubscription,
+} from "react-stomp-hooks";
 
 const vaadin = window.Vaadin as {
   documentTitleSignal: Signal<string>;
@@ -25,9 +33,12 @@ effect(() => {
 });
 
 export default function MainLayout() {
-  const currentTitle = useViewConfig()?.title ?? '';
+  const currentTitle = useViewConfig()?.title ?? "";
   const navigate = useNavigate();
   const location = useLocation();
+
+  const [enabled, setEnabled] = useState(false);
+  const WEBSOCKET_URL = "ws://localhost:8080/create-ws-connection";
 
   // useEffect(() => {
   //   vaadin.documentTitleSignal.value = currentTitle;
@@ -35,19 +46,20 @@ export default function MainLayout() {
   vaadin.documentTitleSignal.value = currentTitle;
 
   return (
-    <Editor/>
-  //   <TextArea
-  //         label=""
-  //         maxlength={500}
-  //         helperText={"skibidi?"}
-  //         onValueChanged={(event) => {
-  //           console.log("ballsack")
-  //         }}
-  //       />
-  )
+    <StompSessionProvider url={WEBSOCKET_URL}>
+      <Editor />
+    </StompSessionProvider>
+    //   <TextArea
+    //         label=""
+    //         maxlength={500}
+    //         helperText={"skibidi?"}
+    //         onValueChanged={(event) => {
+    //           console.log("ballsack")
+    //         }}
+    //       />
+  );
 
   //BELOW IS COMMENTED BOILERPLATE, JUST FOR REFERENCE NOTHING ELSE
-
 
   // return (
   //     <AppLayout primarySection="drawer">
