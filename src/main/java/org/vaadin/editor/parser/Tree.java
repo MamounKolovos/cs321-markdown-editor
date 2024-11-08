@@ -171,10 +171,10 @@ public class Tree {
         Token firstToken = tokenStream.getNextToken();
 
         if(firstToken != null){
-            this.root = new Branch();                        
-            Node<Token> firstNode = new Node<>(firstToken); 
-            this.root.getBranch()[0] = firstNode;
-            this.root.setSize(this.root.getSize()+1);                             
+            this.root = new Branch();                           //initialize the tree root
+            Node<Token> firstNode = new Node<>(firstToken);     //make the first index for root
+            this.root.getBranch()[0] = firstNode;               //stored first index in the root array
+            this.root.setSize(this.root.getSize()+1);           //incrimented the size of root array                             
 
             Token nextToken = tokenStream.getNextToken();
             if (nextToken != null){
