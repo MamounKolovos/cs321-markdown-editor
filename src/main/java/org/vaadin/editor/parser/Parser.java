@@ -11,9 +11,14 @@ public class Parser {
      */
     private Tree tree;
 
+    /**
+     * Parser Constructor.
+     * @param userString
+     */
     public Parser(String userString) {
         this.tree = new Tree(userString);
     }
+
     /**
      * The DFS tree treversal for parsing the tree.
      * @return a K-nary tree.
