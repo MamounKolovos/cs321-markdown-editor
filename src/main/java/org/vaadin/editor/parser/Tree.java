@@ -178,7 +178,7 @@ public class Tree {
 
             Token nextToken = tokenStream.getNextToken();
             if (nextToken != null){
-            this.makeTree(nextToken, this.root.getBranch(), this.root.getBranch(), 0);
+            this.makeTree(nextToken, this.root, this.root, 0);
             }
         }
     }
@@ -187,42 +187,47 @@ public class Tree {
      * Private method called by the constructor to recursively make K-nary tree.
      */
     @SuppressWarnings("unchecked")
-    private void makeTree(Token token, Node<Token>[] currLevel, Node<Token>[] parent, int currIndex){
+    private void makeTree(Token token, Branch current, Branch parent, int currIndex){
 
         int comparison = 0;
 
         if(token != null){ //checks for null tokens
-        
-            comparison = this.compare(token, currLevel[currIndex].getNode()); //compares levels this token with the previously inserted token
+
+            comparison = this.compare(token, current.getBranch()[currIndex].getNode()); //compares levels this token with the previously inserted token
             
             if (comparison == 0){ //the case where two tokens are of equal level
                 
-                if(currLevel.length == currLevel[currIndex].getSize()) { //if the current array is full
-                    Node<Token>[] tempArr = new Node[currLevel.length*2];
-                    for(int i=0; i<currLevel.length; i++){
-                        tempArr[i] = currLevel[i];
+                if(current.getSize() == current.getBranch().length) { //if the current array is full
+                    Node<Token>[] tempArr = new Node[current.getBranch().length*2];
+                    for(int i=0; i<current.getBranch().length; i++){
+                        tempArr[i] = current.getBranch()[i];
                     }
-                    currLevel = tempArr;
+                    current.setBranch(tempArr);
                     Node<Token> nextTokenNode = new Node<>(token);
-                    currLevel[currIndex+1] = nextTokenNode;
+                    current.getBranch()[currIndex+1] = nextTokenNode;
                 }
                 else{ //if the current array has room
-                    currArr[currIndex+1] = token;
-                    currLevel.setNode(currArr);
+                    Node<Token> nextTokenNode = new Node<>(token);
+                    current.getBranch()[currIndex+1] = nextTokenNode;
                 }
-                currLevel.setSize(currLevel.getSize()+1);
+                current.setSize(current.getSize()+1);
                 token = this.tokenStream.getNextToken();
                 currIndex ++;
                 if (token != null){
-                    this.makeTree(token, currLevel, currIndex);
+                    this.makeTree(token, current, parent, currIndex);//recursive call
                 }
             }
             else if (comparison > 0){ //the case where the current token has a higher presidence than the row its on
-                Token [] childArr = new Token[1];
-                childArr[0] = token;
-                Node<Token []> childNode = new Node<>(childArr);
-                
-                currLevel.setChild(childNode);
+                Branch childBranch = new Branch();
+                Node<Token> childNode = new Node<>(token);
+                childBranch.getBranch()[0] = childNode;
+                childBranch.setSize(1);
+                childBranch.setLevel(current.getLevel()+1);
+                current = childBranch;
+                token = this.tokenStream.getNextToken();
+                if (token != null){
+                    this.makeTree(token, current, parent, 0);
+                }
             }
             else { //the case where the current token has lower presidence than the row its on
 
