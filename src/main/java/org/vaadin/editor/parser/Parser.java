@@ -6,10 +6,15 @@ import org.vaadin.editor.tokenizer.*;
 
 abstract class Node<T extends Node<?>> {
     String type;
+    String tagName; //html tag name: em, strong, etc
     ArrayList<T> children;
 
     String getType() {
         return this.type;
+    }
+
+    String getTagName() {
+        return this.tagName;
     }
 
     ArrayList<T> getChildren() {
@@ -51,61 +56,93 @@ final class TextNode extends PhrasingContent {
 
 class RootNode extends Node<FlowContent>{
     String type = "root";
+    String tagName = "html";
     // ArrayList<FlowContent> children;
 
     String getType() {
         return this.type;
     }
+
+    String getTagName() {
+        return this.tagName;
+    }
 }
 
 class ParagraphNode extends FlowContent {
     String type = "paragraph";
+    String tagName = "p";
 
     String getType() {
         return this.type;
+    }
+
+    String getTagName() {
+        return this.tagName;
     }
 }
 
 final class StrongNode extends PhrasingContent{
     String type = "strong";
+    String tagName = "strong";
 
     String getType() {
         return this.type;
+    }
+
+    String getTagName() {
+        return this.tagName;
     }
 }
 
 final class EmphasisNode extends PhrasingContent{
     String type = "emphasis";
+    String tagName = "em";
 
     String getType() {
         return this.type;
+    }
+    
+    String getTagName() {
+        return this.tagName;
     }
 }
 
 final class StrikeNode extends PhrasingContent{
     String type = "strike";
+    String tagName = "strike";
 
     String getType() {
         return this.type;
+    }
+
+    String getTagName() {
+        return this.tagName;
     }
 }
 
 //highlight
 final class MarkNode extends PhrasingContent{
     String type = "mark";
+    String tagName = "mark";
 
     String getType() {
         return this.type;
+    }
+
+    String getTagName() {
+        return this.tagName;
     }
 }
 
 public class Parser {
 
+    String string;
     Tokenizer tokenizer;
     RootNode root;
     private Token lookahead;
 
     public Parser(String string) {
+        this.string = string;
         this.tokenizer = new Tokenizer(string);
     }
 
@@ -117,7 +154,7 @@ public class Parser {
         }
 
         if (token.type != type) {
-            throw new Error("types do not match");
+            throw new Error(String.format("types do not match: %s != %s", token.type, type));
         }
 
         this.lookahead = this.tokenizer.getNextToken();
@@ -162,10 +199,10 @@ public class Parser {
                 return this.strong();
             case ITALICS:
                 return this.emphasis();
-            // case STRIKETHROUGH:
-            //     return this.strikethrough();
-            // case HIGHLIGHT:
-            //     return this.mark();
+            case STRIKETHROUGH:
+                return this.strikethrough();
+            case HIGHLIGHT:
+                return this.mark();
             default:
                 throw new Error("ok");
         }
@@ -183,7 +220,12 @@ public class Parser {
         this.eat(TokenType.BOLD);
         StrongNode node = new StrongNode();
         ArrayList<PhrasingContent> contents = new ArrayList<>();
-        while (this.lookahead != null && this.lookahead.type != TokenType.BOLD) {
+        while (
+            this.lookahead != null && 
+            //continue recursing if the next token is not bold OR not closing
+            //if the next token is bold AND closing, that means we dont need to recurse further and can close the bold tag
+            (this.lookahead.type != TokenType.BOLD || this.lookahead.actionType != ActionType.CLOSE)
+        ) {
             PhrasingContent content = this.phrasingContent();
             contents.add(content);
         }
@@ -196,7 +238,11 @@ public class Parser {
         this.eat(TokenType.ITALICS);
         EmphasisNode node = new EmphasisNode();
         ArrayList<PhrasingContent> contents = new ArrayList<>();
-        while (this.lookahead != null && this.lookahead.type != TokenType.ITALICS) {
+        while (
+            this.lookahead != null && 
+            //continue recursing if the next token is not italics OR not closing
+            (this.lookahead.type != TokenType.ITALICS || this.lookahead.actionType != ActionType.CLOSE)
+        ) {
             PhrasingContent content = this.phrasingContent();
             contents.add(content);
         }
@@ -205,43 +251,118 @@ public class Parser {
         return node;
     }
 
-    // private StrikeNode strikethrough() {
+    private StrikeNode strikethrough() {
+        this.eat(TokenType.STRIKETHROUGH);
+        StrikeNode node = new StrikeNode();
+        ArrayList<PhrasingContent> contents = new ArrayList<>();
+        while (
+            this.lookahead != null && 
+            (this.lookahead.type != TokenType.STRIKETHROUGH || this.lookahead.actionType != ActionType.CLOSE)
+        ) {
+            PhrasingContent content = this.phrasingContent();
+            contents.add(content);
+        }
+        this.eat(TokenType.STRIKETHROUGH);
+        node.children = contents;
+        return node;
+    }
 
-    // }
+    private MarkNode mark() {
+        this.eat(TokenType.HIGHLIGHT);
+        MarkNode node = new MarkNode();
+        ArrayList<PhrasingContent> contents = new ArrayList<>();
+        while (
+            this.lookahead != null && 
+            (this.lookahead.type != TokenType.HIGHLIGHT || this.lookahead.actionType != ActionType.CLOSE)
+        ) {
+            PhrasingContent content = this.phrasingContent();
+            contents.add(content);
+        }
+        this.eat(TokenType.HIGHLIGHT);
+        node.children = contents;
+        return node;
+    }
 
-    // private MarkNode mark() {
-
-    // }
-
-    // private void print() {
-    //     RootNode traversalNode = this.root;
-    //     Queue<ContentNode> bfsQueue = new LinkedList<ContentNode>();
-        
-    //     for (int i = 0; i < traversalNode.children.size(); i++) {
-    //         bfsQueue.add(traversalNode.children.get(i));
-    //     }
-
-    //     while (bfsQueue.size() != 0) {
-    //         ContentNode node = bfsQueue.poll();
-
-    //         if (node instanceof TextNode) {
-    //             System.out.format("type: %s, value: %s\n", node.getType(), ((TextNode)node).value);
-    //             continue;
-    //         }
-
-    //         System.out.format("type: %s\n", node.getType());
-
-    //         for (int i = 0; i < node.children.size(); i++) {
-    //             bfsQueue.add(node.children.get(i));
-    //         }
-    //     }
-    // }
+    public String convertToHtml() {
+        return "";
+    }
     
     // public static void main(String[] args) {
     //     Parser parser = new Parser("hello");
     //     parser.parse();
     //     parser.print();
     // }
+}
+
+class Converter {
+
+    /**
+     * Pretty print the directory tree and its file names.
+     * 
+     * @param root
+     *            must be a folder.
+     * @return
+     */
+    public static String convertParseTree(RootNode root) {
+        int indent = 0;
+        StringBuilder sb = new StringBuilder();
+        convertParseTree(root, indent, sb);
+        return sb.toString();
+    }
+    
+    private static <T extends Node<?>> void convertParseTree(Node<T> node, int indent,
+            StringBuilder sb) {
+        sb.append(getIndentString(indent));
+        sb.append("<");
+        sb.append(node.getTagName());
+        sb.append(">");
+        sb.append("\n");
+        for (T child : node.children) {
+            if (child instanceof TextNode) {
+                printNode(child, indent + 1, sb);
+            } else {
+                convertParseTree(child, indent + 1, sb);
+            }
+        }
+
+        sb.append(getIndentString(indent));
+        sb.append("</");
+        sb.append(node.getTagName());
+        sb.append(">");
+        sb.append("\n");
+    }
+    
+    private static <T extends Node<?>> void printNode(Node<T> node, int indent, StringBuilder sb) {
+        sb.append(getIndentString(indent));
+        sb.append(((TextNode)node).value);
+        sb.append("\n");
+    }
+    
+    private static String getIndentString(int indent) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < indent; i++) {
+            sb.append("  ");
+        }
+        return sb.toString();
+    }
+    
+    public static void main(String[] args) {
+    
+        // Parser parser = new Parser("*1 *2* 3*");
+        // Parser parser = new Parser("**1 **2** 3**");
+        // Parser parser = new Parser("***hey***");
+        Parser parser = new Parser("hey\nhi");
+        // Parser parser = new Parser("**hey *lol* ok**");
+        // Parser parser = new Parser("==~~***hi***~~==\n*ok*");
+        System.out.println(parser.string);
+    
+        parser.parse();
+        String result = PrintTree.printParseTree(parser.root);
+        System.out.println(result);
+        
+        String result1 = Converter.convertParseTree(parser.root);
+        System.out.println(result1);
+    }
 }
 
 
@@ -281,7 +402,9 @@ private static <T extends Node<?>> void printParseTree(Node<T> node, int indent,
 private static <T extends Node<?>> void printNode(Node<T> node, int indent, StringBuilder sb) {
     sb.append(getIndentString(indent));
     sb.append("+--");
-    sb.append(node.getType() + ": " + "\"" + ((TextNode)node).value + "\"");
+    String value = ((TextNode)node).value;
+    if (value.equals("\n")) value = "\\n";
+    sb.append(node.getType() + ": " + "\"" + value + "\"");
     sb.append("\n");
 }
 
@@ -295,8 +418,13 @@ private static String getIndentString(int indent) {
 
 public static void main(String[] args) {
 
+    // Parser parser = new Parser("*1 *2* 3*");
     // Parser parser = new Parser("**1 **2** 3**");
-    Parser parser = new Parser("***hey***");
+    // Parser parser = new Parser("***hey***");
+    Parser parser = new Parser("hey");
+    // Parser parser = new Parser("==~~***hi***~~==\n*ok*");
+    System.out.println(parser.string);
+
     parser.parse();
     String result = printParseTree(parser.root);
     System.out.println(result);

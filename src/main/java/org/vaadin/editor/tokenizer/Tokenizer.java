@@ -82,11 +82,6 @@ enum FlankDirection {
     NEITHER
 }
 
-enum ActionType {
-    OPEN,
-    CLOSE,
-}
-
 /**
  * object representation of a delimiter run
  * <p>
@@ -387,11 +382,11 @@ public class Tokenizer {
         return this.cursor != this.string.length();
     }
 
-    private void updateState(TokenType tokenType, String tokenValue) {
+    private void updateState(TokenType tokenType, String tokenValue, ActionType actionType) {
         if (!this.hasMoreTokens()) return;
 
         //if new token value is the same as the last token value on the stack, that means the context has ended and needs to be removed
-        if (this.contextStack.size() != 0 && tokenValue.equals(this.contextStack.peek())) {
+        if (this.contextStack.size() != 0 && tokenValue.equals(this.contextStack.peek()) && actionType == ActionType.CLOSE) {
             this.contextStack.pop();
         } else {
             if (this.balanced && TokenizerUtils.isFormatToken(tokenType)) this.contextStack.push(tokenValue.toString());
@@ -414,12 +409,13 @@ public class Tokenizer {
         if (this.scheduledTokens.size() != 0) {
             Token token = this.scheduledTokens.pop();
             this.cursor += token.value.length();
-            this.updateState(token.type, token.value);
+            this.updateState(token.type, token.value, token.actionType);
             return token;
         }
 
         TokenType tokenType = null;
         String tokenValue = null;
+        ActionType actionType = null;
         //gets the part of the string that hasnt been tokenized yet
         this.slicedString = this.string.substring(this.cursor);
         
@@ -457,9 +453,9 @@ public class Tokenizer {
 
                 if (this.balanced && !this.contextStack.empty() && curRun.actionType == ActionType.CLOSE) {
                     String value = this.contextStack.peek();
-                    Token token = new Token(TokenizerUtils.getTokenType(value), value);
+                    Token token = new Token(TokenizerUtils.getTokenType(value), value, ActionType.CLOSE);
                     this.cursor += token.value.length();
-                    this.updateState(token.type, token.value);
+                    this.updateState(token.type, token.value, token.actionType);
                     return token;
                 }
 
@@ -469,6 +465,7 @@ public class Tokenizer {
                 if (this.balanced) {
                     tokenType = TokenType.HIGHLIGHT;
                     tokenValue = "==";
+                    actionType = ActionType.OPEN;
                     this.cursor += 2;
                 }
                 break;
@@ -480,9 +477,9 @@ public class Tokenizer {
 
                 if (this.balanced && !this.contextStack.empty() && curRun.actionType == ActionType.CLOSE) {
                     String value = this.contextStack.peek();
-                    Token token = new Token(TokenizerUtils.getTokenType(value), value);
+                    Token token = new Token(TokenizerUtils.getTokenType(value), value, ActionType.CLOSE);
                     this.cursor += token.value.length();
-                    this.updateState(token.type, token.value);
+                    this.updateState(token.type, token.value, ActionType.CLOSE);
                     return token;
                 }
 
@@ -492,6 +489,7 @@ public class Tokenizer {
                 if (this.balanced) {
                     tokenType = TokenType.STRIKETHROUGH;
                     tokenValue = "~~";
+                    actionType = ActionType.OPEN;
                     this.cursor += 2;
                 }
                 break;
@@ -503,9 +501,9 @@ public class Tokenizer {
 
                 if (this.balanced && !this.contextStack.empty() && curRun.actionType == ActionType.CLOSE) {
                     String value = this.contextStack.peek();
-                    Token token = new Token(TokenizerUtils.getTokenType(value), value);
+                    Token token = new Token(TokenizerUtils.getTokenType(value), value, ActionType.CLOSE);
                     this.cursor += token.value.length();
-                    this.updateState(token.type, token.value);
+                    this.updateState(token.type, token.value, token.actionType);
                     return token;
                 }
                 
@@ -516,7 +514,7 @@ public class Tokenizer {
                  * if balanced, symbols can get processed as their proper token types such as italics and bold
                  * if not balanced, all symbols need to be processed as text
                  */
-                if (this.balanced) {
+                if (eqGroup != null) {//weird java thing, using this.balanced here causes linter warnings from the compiler
                     DelimRun lastRun = eqGroup.get(eqGroup.size() - 1);
                     if (curRun.length == 3) {// ***1** 2*
 
@@ -525,7 +523,7 @@ public class Tokenizer {
                             tokenValue = startCharAsStr.repeat(2);
 
                             this.scheduledTokens.push(
-                                new Token(TokenType.ITALICS, startCharAsStr)
+                                new Token(TokenType.ITALICS, startCharAsStr, ActionType.OPEN)
                             );
                         } else {
                             tokenType = TokenizerUtils.getTokenType(lastRun.value);
@@ -533,13 +531,14 @@ public class Tokenizer {
 
                             DelimRun penultimateRun = eqGroup.get(eqGroup.size() - 2);
                             this.scheduledTokens.push(
-                                new Token(TokenizerUtils.getTokenType(penultimateRun.value), penultimateRun.value)
+                                new Token(TokenizerUtils.getTokenType(penultimateRun.value), penultimateRun.value, ActionType.OPEN)
                             );
                         }
                     } else {
                         tokenType = TokenizerUtils.getTokenType(curRun.value);
                         tokenValue = curRun.value;
                     }
+                    actionType = ActionType.OPEN;
                     this.cursor += tokenValue.length();
                 }
                 break;
@@ -554,9 +553,9 @@ public class Tokenizer {
         }
 
         assert tokenValue != null;
-        this.updateState(tokenType, tokenValue);
+        this.updateState(tokenType, tokenValue, actionType);
 
-        return new Token(tokenType, tokenValue);
+        return new Token(tokenType, tokenValue, actionType);
     }
 
     public static void main(String[] args) {
@@ -591,7 +590,8 @@ public class Tokenizer {
         // Tokenizer tokenizer = new Tokenizer("a*==hello==*");
         // Tokenizer tokenizer = new Tokenizer("=~=~==ok~=~=~==");
         // Tokenizer tokenizer = new Tokenizer("1***");
-        Tokenizer tokenizer = new Tokenizer("0~~1~~2~~3~~4");
+        // Tokenizer tokenizer = new Tokenizer("0~~1~~2~~3~~4");
+        Tokenizer tokenizer = new Tokenizer("**hey *lol***");
         // Tokenizer tokenizer = new Tokenizer("=~=~==ok~=~=~==");
         // Tokenizer tokenizer = new Tokenizer("1***2 ~~3~~");
         // Tokenizer tokenizer = new Tokenizer("**1 ****2 3**");
@@ -616,7 +616,7 @@ public class Tokenizer {
 
         Token token;
         while((token = tokenizer.getNextToken()) != null) {
-            System.out.printf("%s: %s\n", token.type, token.value);
+            System.out.printf("%s(%s): %s\n", token.type, token.actionType, token.value);
         }
         // System.out.println(tokenizer.getNextToken().value);
         // System.out.println(tokenizer.getNextToken().value);
