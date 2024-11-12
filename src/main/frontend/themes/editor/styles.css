@@ -1,9 +1,96 @@
 .view {
-    padding: 1rem;
+    padding: 0;
 }
 
+/* Header bar */
+.header-bar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background-color: #007bff;
+    height: 40px; 
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 10px; 
+    z-index: 1000;
+}
+
+.button-container {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+}
+
+/* Style buttons to be white */
+.style-button, .sidebar-button {
+    background-color: white; 
+    color: #007bff; 
+    border: none;
+    cursor: pointer; 
+}
+
+/* Text editor styles */
 .text-editor {
-    width: 50%;
-    height: 90%;
+    width: 50%; 
+    height: calc(100vh - 40px); 
     padding: 1px;
+    margin-top: 40px; 
+    resize: none;
+    box-sizing: border-box; 
+}
+
+/* Sidebar styles */
+.sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 250px;
+    height: 100%;
+    background-color: #f5f5f5; 
+    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.2);
+    padding: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #007bff;
+    padding: 0 10px;
+    height: 40px;
+    color: white;
+}
+
+.sidebar-title {
+    font-size: 20px;
+    margin: 0;
+    color: white;
+}
+
+.close-sidebar-button {
+    font-size: 16px;
+    padding: 6px 10px;
+    background-color: white;
+    color: #007bff;
+}
+
+/* Sidebar content styling */
+.sidebar-content {
+    padding: 10px;
+    flex-grow: 1; 
+}
+
+.sidebar-page-button {
+    display: block;
+    margin: 5px 0;
+}
+
+.back-button {
+    margin-bottom: 4px;
+    background-color: transparent;
+    color: white;
 }
