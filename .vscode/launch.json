@@ -6,6 +6,27 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Converter",
+      "request": "launch",
+      "mainClass": "org.vaadin.editor.parser.Converter",
+      "projectName": "MarkdownEditor"
+    },
+    {
+      "type": "java",
+      "name": "PrintTree",
+      "request": "launch",
+      "mainClass": "org.vaadin.editor.parser.PrintTree",
+      "projectName": "MarkdownEditor"
+    },
+    {
+      "type": "java",
+      "name": "Tokenizer",
+      "request": "launch",
+      "mainClass": "org.vaadin.editor.tokenizer.Tokenizer",
+      "projectName": "MarkdownEditor"
+    },
+    {
+      "type": "java",
       "name": "Application",
       "request": "launch",
       "mainClass": "org.vaadin.editor.Application",
