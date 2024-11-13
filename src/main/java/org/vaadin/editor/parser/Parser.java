@@ -284,14 +284,8 @@ public class Parser {
     }
 
     public String convertToHtml() {
-        return "";
+        return Converter.convertParseTree(this.root);
     }
-    
-    // public static void main(String[] args) {
-    //     Parser parser = new Parser("hello");
-    //     parser.parse();
-    //     parser.print();
-    // }
 }
 
 class Converter {
