@@ -286,6 +286,14 @@ public class Parser {
     public String convertToHtml() {
         return Converter.convertParseTree(this.root);
     }
+
+    public static void main(String[] args) {
+        Parser parser = new Parser("ok\nhi");
+        parser.parse();
+
+        System.out.println(PrintTree.printParseTree(parser.root));
+        System.out.println(parser.convertToHtml());
+    }
 }
 
 class Converter {
@@ -339,88 +347,56 @@ class Converter {
         }
         return sb.toString();
     }
-    
-    public static void main(String[] args) {
-    
-        // Parser parser = new Parser("*1 *2* 3*");
-        // Parser parser = new Parser("**1 **2** 3**");
-        // Parser parser = new Parser("***hey***");
-        Parser parser = new Parser("hey\nhi");
-        // Parser parser = new Parser("**hey *lol* ok**");
-        // Parser parser = new Parser("==~~***hi***~~==\n*ok*");
-        System.out.println(parser.string);
-    
-        parser.parse();
-        String result = PrintTree.printParseTree(parser.root);
-        System.out.println(result);
-        
-        String result1 = Converter.convertParseTree(parser.root);
-        System.out.println(result1);
-    }
 }
 
 
 class PrintTree {
 
-/**
- * Pretty print the directory tree and its file names.
- * 
- * @param root
- *            must be a folder.
- * @return
- */
-public static String printParseTree(RootNode root) {
-    int indent = 0;
-    StringBuilder sb = new StringBuilder();
-    printParseTree(root, indent, sb);
-    return sb.toString();
-}
+    /**
+     * Pretty print the directory tree and its file names.
+     * 
+     * @param root
+     *            must be a folder.
+     * @return
+     */
+    public static String printParseTree(RootNode root) {
+        int indent = 0;
+        StringBuilder sb = new StringBuilder();
+        printParseTree(root, indent, sb);
+        return sb.toString();
+    }
 
-private static <T extends Node<?>> void printParseTree(Node<T> node, int indent,
-        StringBuilder sb) {
-    sb.append(getIndentString(indent));
-    sb.append("+--");
-    sb.append(node.getType());
-    sb.append("/");
-    sb.append("\n");
-    for (T child : node.children) {
-        if (child instanceof TextNode) {
-            printNode(child, indent + 1, sb);
-        } else {
-            printParseTree(child, indent + 1, sb);
+    private static <T extends Node<?>> void printParseTree(Node<T> node, int indent,
+            StringBuilder sb) {
+        sb.append(getIndentString(indent));
+        sb.append("+--");
+        sb.append(node.getType());
+        sb.append("/");
+        sb.append("\n");
+        for (T child : node.children) {
+            if (child instanceof TextNode) {
+                printNode(child, indent + 1, sb);
+            } else {
+                printParseTree(child, indent + 1, sb);
+            }
         }
+
     }
 
-}
-
-private static <T extends Node<?>> void printNode(Node<T> node, int indent, StringBuilder sb) {
-    sb.append(getIndentString(indent));
-    sb.append("+--");
-    String value = ((TextNode)node).value;
-    if (value.equals("\n")) value = "\\n";
-    sb.append(node.getType() + ": " + "\"" + value + "\"");
-    sb.append("\n");
-}
-
-private static String getIndentString(int indent) {
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < indent; i++) {
-        sb.append("|  ");
+    private static <T extends Node<?>> void printNode(Node<T> node, int indent, StringBuilder sb) {
+        sb.append(getIndentString(indent));
+        sb.append("+--");
+        String value = ((TextNode)node).value;
+        if (value.equals("\n")) value = "\\n";
+        sb.append(node.getType() + ": " + "\"" + value + "\"");
+        sb.append("\n");
     }
-    return sb.toString();
-}
 
-public static void main(String[] args) {
-
-    // Parser parser = new Parser("*1 *2* 3*");
-    // Parser parser = new Parser("**1 **2** 3**");
-    // Parser parser = new Parser("***hey***");
-    Parser parser = new Parser("hey");
-    // Parser parser = new Parser("==~~***hi***~~==\n*ok*");
-    System.out.println(parser.string);
-
-    parser.parse();
-    String result = printParseTree(parser.root);
-    System.out.println(result);
-}
+    private static String getIndentString(int indent) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < indent; i++) {
+            sb.append("|  ");
+        }
+        return sb.toString();
+    }
 }
