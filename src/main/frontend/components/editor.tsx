@@ -47,17 +47,16 @@ export default function Editor() {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState('main');
 	const [text, setText] = useState("");
+	const [html, setHtml] = useState("");
 	const [userId, setUserId] = useState<number | null>(null);
 	const stompClient = useStompClient();
-	// var userId: Promise<number> | null = null;
-	const [userId, setUserId] = useState<number | null>(null);
 
 
-	useSubscription("/broadcasts/test", (message) => {
+	useSubscription("/broadcasts/updates", (message) => {
 		const data = JSON.parse(message.body);
-		console.info("new broadcast from " + data.senderId + " : " + data.content);
 		if (editorRef.current) {
-			editorRef.current.value = data.content
+			editorRef.current.value = data.original.content
+			setHtml(data.html);
 		} else {
 			console.warn("editorRef.current is NULL!");
 		}
@@ -68,12 +67,15 @@ export default function Editor() {
 			return;
 		}
 
+		// request a user id from the server
 		const getUserId = async () => {
 			const response = await PresenceManager.generateUserId();
 			setUserId(response);
 		}
 
 		getUserId();
+
+		// request the current text and then update the text box accordingly
 	}, []);
 
 	const editor = (
@@ -85,8 +87,11 @@ export default function Editor() {
 				sendTextToServer(event.target.value);
 			}}
 		/>
-	)
+	);
 
+	const htmlView = (
+		<div className="html-render" dangerouslySetInnerHTML={{__html: html}} />
+	)
 
 	const sendTextToServer = (text: string) => {
 		if (!stompClient) {
@@ -100,7 +105,7 @@ export default function Editor() {
 		});
 
 		stompClient.publish({
-			destination: '/app/test',
+			destination: '/app/update',
 			body: content
 		});
 	}
@@ -254,7 +259,10 @@ export default function Editor() {
                     </Button>
                 </div>
             </div>
-            {editor}
+			<div className="main-view">
+				{editor}
+				{htmlView}
+			</div>
             {isSidebarOpen && (
                 <div className="sidebar">
                     <div className="sidebar-header">
