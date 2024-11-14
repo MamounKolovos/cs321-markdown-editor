@@ -368,6 +368,7 @@ public class Tokenizer {
 
             if (
                 curChar == '\\' ||
+                curChar == '\n' ||
                 ((curChar == '*' || curChar == '_') && this.balanced && this.getRunAtPos(i) != null) ||
                 (curChar == '~' && this.balanced && this.getRunAtPos(i) != null) ||
                 (curChar == '=' && this.balanced && this.getRunAtPos(i) != null)
@@ -543,6 +544,11 @@ public class Tokenizer {
                 }
                 break;
             }
+            case '\n': {
+                tokenType = TokenType.BREAK;
+                tokenValue = "\n";
+                this.cursor += 1;
+            }
         }
 
         if (tokenType == null) {//no "special" token was found which means the upcoming characters must be a text token
@@ -591,7 +597,8 @@ public class Tokenizer {
         // Tokenizer tokenizer = new Tokenizer("=~=~==ok~=~=~==");
         // Tokenizer tokenizer = new Tokenizer("1***");
         // Tokenizer tokenizer = new Tokenizer("0~~1~~2~~3~~4");
-        Tokenizer tokenizer = new Tokenizer("**hey *lol***");
+        // Tokenizer tokenizer = new Tokenizer("**hey *lol***");
+        Tokenizer tokenizer = new Tokenizer("hey\nhi");
         // Tokenizer tokenizer = new Tokenizer("=~=~==ok~=~=~==");
         // Tokenizer tokenizer = new Tokenizer("1***2 ~~3~~");
         // Tokenizer tokenizer = new Tokenizer("**1 ****2 3**");

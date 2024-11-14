@@ -184,6 +184,10 @@ public class Parser {
         ParagraphNode paragraph = new ParagraphNode();
         ArrayList<PhrasingContent> contents = new ArrayList<>();
         while (this.lookahead != null) {
+            if (this.lookahead.type == TokenType.BREAK) {
+                this.eat(TokenType.BREAK);
+                break;
+            }
             PhrasingContent content = this.phrasingContent();
             contents.add(content);
         }
@@ -204,7 +208,7 @@ public class Parser {
             case HIGHLIGHT:
                 return this.mark();
             default:
-                throw new Error("ok");
+                throw new Error("token is not handled yet");
         }
     }
 
