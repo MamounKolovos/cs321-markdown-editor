@@ -30,14 +30,27 @@
     cursor: pointer; 
 }
 
+.main-view {
+	margin-top: 40px;
+	height: calc(100% - 80px);
+	display: flex;
+	flex-direction: row;
+}
+
 /* Text editor styles */
 .text-editor {
     width: 50%; 
-    height: calc(100vh - 40px); 
-    padding: 1px;
-    margin-top: 40px; 
+	height: 100%;
     resize: none;
     box-sizing: border-box; 
+}
+
+/* HTML render pane styles */
+.html-render {
+	width: 50%;
+	height: 100%;
+	word-wrap: break-word;
+	overflow-y: auto;
 }
 
 /* Sidebar styles */
