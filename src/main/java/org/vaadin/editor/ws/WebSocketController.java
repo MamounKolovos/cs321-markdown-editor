@@ -12,13 +12,13 @@ public class WebSocketController {
 
 	@MessageMapping("/test")
 	@SendTo("/broadcasts/test")	// anything returned will be broadcast to this endpoint
-	public String test(TextMessage text) throws Exception {
+	public TextMessage test(TextMessage text) throws Exception {
 		String content = text.getContent();
 
 		PresenceManager.setGlobalText(content);
 
 		System.out.println(PresenceManager.getGlobalText());
 
-		return content;	// broadcast to /broadcasts/test
+		return text;	// broadcast to /broadcasts/test
 	}
 }
