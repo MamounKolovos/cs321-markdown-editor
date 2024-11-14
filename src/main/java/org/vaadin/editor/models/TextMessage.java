@@ -8,8 +8,9 @@ public class TextMessage {
 
 	}
 
-	public TextMessage(String content) {
+	public TextMessage(String content, int senderId) {
 		this.content = content;
+		this.senderId = senderId;
 	}
 
 
