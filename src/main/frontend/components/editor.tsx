@@ -1,5 +1,6 @@
 import { Button } from "@vaadin/react-components";
 import React, { useRef, useState, useEffect } from "react";
+import { useSubscription, useStompClient } from "react-stomp-hooks";
 
 enum Style {
     BOLD,
@@ -43,13 +44,37 @@ export default function Editor() {
     const editorRef = useRef<HTMLTextAreaElement>(null);
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState('main');
+	const [text, setText] = useState("");
+	const [userId, setUserId] = useState<number | null>(null);
+	const stompClient = useStompClient();
 
-    const editor = (
-        <textarea
-            ref={editorRef}
-            className="text-editor"
-        />
-    );
+	const editor = (
+		<textarea
+			ref={editorRef}
+			className="text-editor"
+			onChange={async (event) => {
+				setText(event.target.value);
+				sendTextToServer(event.target.value);
+			}}
+		/>
+	)
+
+	const sendTextToServer = (text: string) => {
+		if (!stompClient) {
+			console.warn('no stomp client');
+			return;
+		}
+
+		const content: string = JSON.stringify({
+			content: text,
+			senderId: userId
+		});
+
+		stompClient.publish({
+			destination: '/app/test',
+			body: content
+		});
+	}
 
     const wrapSelection = (style: Style) => () => {
         if (!editorRef.current) return;
