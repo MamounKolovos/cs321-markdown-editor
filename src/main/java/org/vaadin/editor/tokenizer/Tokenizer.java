@@ -1,7 +1,7 @@
 package org.vaadin.editor.tokenizer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+// import java.util.Arrays;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.regex.Matcher;
