@@ -11,7 +11,8 @@ public enum TokenType {
     STRIKETHROUGH(new String[]{"~~"}),
     HIGHLIGHT(new String[]{"=="}),
     HEADER(new String[]{"###", "##", "#"}),
-    CODE_BLOCK(new String[]{"```"});
+    CODE_BLOCK(new String[]{"```"}),
+    BREAK(new String[]{"\n"});
 
     public final String[] symbols;
 

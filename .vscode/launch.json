@@ -6,6 +6,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Parser",
+      "request": "launch",
+      "mainClass": "org.vaadin.editor.parser.Parser",
+      "projectName": "MarkdownEditor"
+    },
+    {
+      "type": "java",
       "name": "Converter",
       "request": "launch",
       "mainClass": "org.vaadin.editor.parser.Converter",
