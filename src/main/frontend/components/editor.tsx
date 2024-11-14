@@ -2,6 +2,8 @@ import { Button } from "@vaadin/react-components";
 import React, { useRef, useState, useEffect } from "react";
 import { useSubscription, useStompClient } from "react-stomp-hooks";
 
+import { PresenceManager } from "Frontend/generated/endpoints"
+
 enum Style {
     BOLD,
     ITALICS,
@@ -47,6 +49,32 @@ export default function Editor() {
 	const [text, setText] = useState("");
 	const [userId, setUserId] = useState<number | null>(null);
 	const stompClient = useStompClient();
+	// var userId: Promise<number> | null = null;
+	const [userId, setUserId] = useState<number | null>(null);
+
+
+	useSubscription("/broadcasts/test", (message) => {
+		const data = JSON.parse(message.body);
+		console.info("new broadcast from " + data.senderId + " : " + data.content);
+		if (editorRef.current) {
+			editorRef.current.value = data.content
+		} else {
+			console.warn("editorRef.current is NULL!");
+		}
+	});
+
+	useEffect(() => {
+		if (userId !== null) {
+			return;
+		}
+
+		const getUserId = async () => {
+			const response = await PresenceManager.generateUserId();
+			setUserId(response);
+		}
+
+		getUserId();
+	}, []);
 
 	const editor = (
 		<textarea
@@ -58,6 +86,7 @@ export default function Editor() {
 			}}
 		/>
 	)
+
 
 	const sendTextToServer = (text: string) => {
 		if (!stompClient) {
