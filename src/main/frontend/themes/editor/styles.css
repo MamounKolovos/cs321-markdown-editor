@@ -107,3 +107,31 @@
     background-color: transparent;
     color: white;
 }
+
+@media print {
+	.text-editor,
+	.header-bar,
+	.sidebar {
+		visibility: hidden !important;
+	}
+
+	.html-render {
+		margin: 1in;
+		width: 100%;
+		height: auto;
+		position: absolute;
+		left: 0;
+		top: 0;
+		page-break-after: avoid;
+	}
+
+	@page {
+		size: auto;
+		margin: 0;
+	}
+
+	body {
+		margin: 0;
+		padding: 0;
+	}
+}
