@@ -3,6 +3,9 @@
   "license": "UNLICENSED",
   "type": "module",
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.6.0",
+    "@fortawesome/free-solid-svg-icons": "^6.6.0",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@polymer/polymer": "3.5.1",
     "@stomp/stompjs": "^7.0.0",
     "@vaadin/bundles": "24.4.7",
