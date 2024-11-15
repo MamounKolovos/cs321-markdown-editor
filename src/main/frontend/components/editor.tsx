@@ -93,7 +93,7 @@ export default function Editor() {
             spellCheck={true}
             placeholder="TYPE HERE!"
 			onChange={async (event) => {
-				setText(event.target.value);
+                handleTextChange(event.target.value);
 				sendTextToServer(event.target.value);
 			}}
 		/>
@@ -275,8 +275,7 @@ export default function Editor() {
         setLineCount(newText.split("\n").length);
     };
 
-    const handleTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const newText = event.target.value;
+    const handleTextChange = (newText: string) => {
         setText(newText);
         updateStats(newText);
         handleCursorMove();
