@@ -124,7 +124,7 @@
       "workbox-core": "7.1.0",
       "workbox-precaching": "7.1.0"
     },
-    "hash": "9e80c54ea96de90e793cc1565881130e938122714501467588abf21ecb608772"
+    "hash": "59bb4f101d9bab886f6d0708398502997bfa301bc0f2c509e5bb46bf9ccf0b0c"
   },
   "overrides": {
     "@vaadin/bundles": "$@vaadin/bundles",
@@ -166,6 +166,9 @@
     "@vaadin/vaadin-lumo-styles": "$@vaadin/vaadin-lumo-styles",
     "@vaadin/vaadin-material-styles": "$@vaadin/vaadin-material-styles",
     "react-stomp-hooks": "$react-stomp-hooks",
-    "@stomp/stompjs": "$@stomp/stompjs"
+    "@stomp/stompjs": "$@stomp/stompjs",
+    "@fortawesome/fontawesome-svg-core": "$@fortawesome/fontawesome-svg-core",
+    "@fortawesome/free-solid-svg-icons": "$@fortawesome/free-solid-svg-icons",
+    "@fortawesome/react-fontawesome": "$@fortawesome/react-fontawesome"
   }
 }
