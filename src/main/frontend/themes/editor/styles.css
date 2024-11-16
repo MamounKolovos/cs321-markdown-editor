@@ -145,9 +145,10 @@
 .text-editor::placeholder {
     color: #999;  
     font-size: 20px; 
-  }
+}
 
-  @media print {
+
+@media print {
 	.text-editor,
 	.header-bar,
 	.sidebar {
