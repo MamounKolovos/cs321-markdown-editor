@@ -1,6 +1,8 @@
 import { Button } from "@vaadin/react-components";
 import React, { useRef, useState, useEffect } from "react";
 import { useSubscription, useStompClient } from "react-stomp-hooks";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBold, faItalic, faStrikethrough, faHighlighter, faCode, faTimes, faArrowLeft, faBars } from '@fortawesome/free-solid-svg-icons';
 
 import { PresenceManager } from "Frontend/generated/endpoints"
 
@@ -15,28 +17,34 @@ enum Style {
 type StyleDef = {
     name: string;
     value: string;
+    icon: React.ReactNode;
 }
 
 const StyleDefs: Record<Style, StyleDef> = {
     [Style.BOLD]: {
         name: "Bold",
-        value: "**"
+        value: "**",
+        icon: <FontAwesomeIcon icon={faBold} />
     },
     [Style.ITALICS]: {
         name: "Italics",
-        value: "*"
+        value: "*",
+        icon: <FontAwesomeIcon icon={faItalic} />
     },
     [Style.STRIKETHROUGH]: {
         name: "Strikethrough",
-        value: "~~"
+        value: "~~",
+        icon: <FontAwesomeIcon icon={faStrikethrough} />
     },
     [Style.HIGHLIGHT]: {
         name: "Highlight",
-        value: "=="
+        value: "==",
+        icon: <FontAwesomeIcon icon={faHighlighter} />
     },
     [Style.CODE_BLOCK]: {
         name: "Code Block",
-        value: "```"
+        value: "```",
+        icon: <FontAwesomeIcon icon={faCode} />
     },
 }
 
@@ -82,8 +90,10 @@ export default function Editor() {
 		<textarea
 			ref={editorRef}
 			className="text-editor"
+            spellCheck={true}
+            placeholder="TYPE HERE!"
 			onChange={async (event) => {
-				setText(event.target.value);
+                handleTextChange(event.target.value);
 				sendTextToServer(event.target.value);
 			}}
 		/>
@@ -110,6 +120,8 @@ export default function Editor() {
 		});
 	}
 
+    
+
     const wrapSelection = (style: Style) => () => {
         if (!editorRef.current) return;
         const editor = editorRef.current;
@@ -126,26 +138,27 @@ export default function Editor() {
     }
 
     const createStyleButton = (style: Style) => {
-        const name = StyleDefs[style].name;
+        const { name, icon } = StyleDefs[style];
         return (
             <Button
                 key={name}
                 onClick={wrapSelection(style)}
                 className="style-button"
             >
-                {name}
+                {icon}
             </Button>
         );
     }
 
     const styleButtons = Array.from(Object.keys(StyleDefs), (style) => createStyleButton(style as unknown as Style));
 
-    // Keyboard shortcut handling
+
+    // keyboard shortcut handling
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (!editorRef.current) return;
 
-            // Check if the editor is focused
+            // check if the editor is focused
             if (document.activeElement !== editorRef.current) return;
 
             switch (event.key) {
@@ -249,17 +262,89 @@ export default function Editor() {
         }
     };
 
+    // Footer State and Functions
+    const [charCount, setCharCount] = useState(0);
+    const [wordCount, setWordCount] = useState(0);
+    const [lineCount, setLineCount] = useState(0);
+    const [cursorLine, setCursorLine] = useState(1);
+    const [cursorColumn, setCursorColumn] = useState(1);
+
+    const updateStats = (newText: string) => {
+        setCharCount(newText.length);
+        setWordCount(newText.trim().split(/\s+/).filter(word => word.length > 0).length);
+        setLineCount(newText.split("\n").length);
+    };
+
+    const handleTextChange = (newText: string) => {
+        setText(newText);
+        updateStats(newText);
+        handleCursorMove();
+    };
+
+    const handleCursorMove = () => {
+        if (editorRef.current) {
+            const text = editorRef.current.value;
+            const cursorIndex = editorRef.current.selectionStart;
+    
+            const lines = text.substring(0, cursorIndex).split("\n");
+            setCursorLine(lines.length);
+    
+            const columnNumber = lines[lines.length - 1].length + 1;
+            setCursorColumn(columnNumber);
+        }
+    };
+
+    useEffect(() => {
+        const updateCursorPosition = () => {
+            handleCursorMove();
+        };
+    
+        const editorElement = editorRef.current;
+        if (editorElement) {
+            editorElement.addEventListener('keyup', updateCursorPosition);
+            editorElement.addEventListener('click', updateCursorPosition);
+        }
+    
+        return () => {
+            if (editorElement) {
+                editorElement.removeEventListener('keyup', updateCursorPosition);
+                editorElement.removeEventListener('click', updateCursorPosition);
+            }
+        };
+    }, []);
+
+    const clearEditor = () => {
+        if (editorRef.current) {
+            editorRef.current.value = ''; // clear the text area
+        }
+        setText('');  // reset the text state
+        setHtml('');  // reset the HTML state
+    };
+
+
     return (
         <React.Fragment>
             <div className="header-bar">
                 <div className="button-container">
                     {styleButtons}
+                </div>
+                <div className = "sidebar-button-container">
+                    <Button onClick={clearEditor} className="clear-button">
+                        <b>Clear</b>
+                    </Button>
                     <Button onClick={() => setSidebarOpen(!isSidebarOpen)} className="sidebar-button">
-                        Menu
+                        <FontAwesomeIcon icon={faBars} />
                     </Button>
                 </div>
             </div>
 			<div className="main-view">
+                <footer className="editor-footer">
+                    <span>Characters: {charCount}</span>
+                    <span>Words: {wordCount}</span>
+                    <span>Lines: {lineCount}</span>
+                    <span>Cursor: Ln {cursorLine}, Col {cursorColumn}</span>
+                </footer>
+
 				{editor}
 				{htmlView}
 			</div>
@@ -270,11 +355,11 @@ export default function Editor() {
                             <h2 className="sidebar-title">Menu</h2>
                         ) : (
                             <Button onClick={() => setCurrentPage('main')} className="back-button">
-                                Back
+                                <FontAwesomeIcon icon={faArrowLeft} />
                             </Button>
                         )}
                         <Button onClick={() => setSidebarOpen(false)} className="close-sidebar-button">
-                            Close
+                            <FontAwesomeIcon icon={faTimes} />
                         </Button>
                     </div>
                     {renderSidebarContent()}

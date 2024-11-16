@@ -10,24 +10,34 @@
     background-color: #007bff;
     height: 40px; 
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
-    padding: 0 10px; 
+    padding: 0 10px;
     z-index: 1000;
 }
 
 .button-container {
     display: flex;
     gap: 10px;
-    padding: 15px;
+    padding: 0px;
+    position: absolute;
+    left: 10px;
 }
 
-/* Style buttons to be white */
-.style-button, .sidebar-button {
+.sidebar-button-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-left: auto;
+    padding: 30px;
+}
+
+/* Style buttons */
+.style-button, .sidebar-button, .clear-button {
     background-color: white; 
     color: #007bff; 
     border: none;
-    cursor: pointer; 
+    cursor: pointer;
 }
 
 .main-view {
@@ -43,6 +53,9 @@
 	height: 100%;
     resize: none;
     box-sizing: border-box; 
+    overflow-y: auto;
+    border-top: none;
+    border-bottom: none;
 }
 
 /* HTML render pane styles */
@@ -51,6 +64,10 @@
 	height: 100%;
 	word-wrap: break-word;
 	overflow-y: auto;
+}
+
+.html-render p {
+    margin: 0;
 }
 
 /* Sidebar styles */
@@ -85,10 +102,10 @@
 }
 
 .close-sidebar-button {
-    font-size: 16px;
+    font-size: 22px;
     padding: 6px 10px;
-    background-color: white;
-    color: #007bff;
+    background-color: transparent;
+    color: white;
 }
 
 /* Sidebar content styling */
@@ -103,12 +120,34 @@
 }
 
 .back-button {
+    font-size: 20px;
     margin-bottom: 4px;
     background-color: transparent;
     color: white;
 }
 
-@media print {
+.editor-footer {
+    position: fixed;
+    bottom: 0;      
+    left: 0;        
+    width: 100%;   
+    background-color: #007bff;
+    border-top: 1px solid #ccc;
+    font-size: 14px;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    gap: 15px;
+    z-index: 1000;
+}
+
+.text-editor::placeholder {
+    color: #999;  
+    font-size: 20px; 
+  }
+
+  @media print {
 	.text-editor,
 	.header-bar,
 	.sidebar {
