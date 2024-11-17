@@ -266,6 +266,13 @@ export default function Editor() {
 
     const renderPage2 = () => (
         <div className="sidebar-content">
+            <p><h1>#Header1</h1></p>
+            <p><h2>##Header2</h2></p>
+            <p><h3>###Header3</h3></p>
+            <p><h4>####Header4</h4></p>
+            <p><h5>#####Header5</h5></p>
+            <p><h6>######Header6</h6></p>
+            <p>-------------------------------</p>
             <p><b>**Bold**</b></p>
             <p>-------------------------------</p>
             <p><i>*Italics*</i></p>
