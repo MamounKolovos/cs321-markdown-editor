@@ -671,7 +671,7 @@ public class Tokenizer {
         // Tokenizer tokenizer = new Tokenizer("**hey *lol***");
         // Tokenizer tokenizer = new Tokenizer("```test```");
         // Tokenizer tokenizer = new Tokenizer("```\nhey **whats up**\n```");
-        Tokenizer tokenizer = new Tokenizer("hi #\n#lol");
+        Tokenizer tokenizer = new Tokenizer("* hi\n* lol");
         // Tokenizer tokenizer = new Tokenizer("=~=~==ok~=~=~==");
         // Tokenizer tokenizer = new Tokenizer("1***2 ~~3~~");
         // Tokenizer tokenizer = new Tokenizer("**1 ****2 3**");

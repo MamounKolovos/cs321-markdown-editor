@@ -174,15 +174,15 @@ public class Parser {
         this.tokenizer = new Tokenizer(string);
     }
 
-    private Token eat(TokenType type) {
+    private Token eat(TokenType type) throws Exception {
         Token token = this.lookahead;
 
         if (token == null) {
-            throw new Error("tried to eat null lookahead");
+            throw new Exception("tried to eat null lookahead");
         }
 
         if (token.type != type) {
-            throw new Error(String.format("types do not match: %s != %s", token.type, type));
+            throw new Exception(String.format("types do not match: %s != %s", token.type, type));
         }
 
         this.lastToken = this.lookahead;
@@ -192,12 +192,31 @@ public class Parser {
 
     /** public entry point for parser */
     public void parse() {
-        this.lookahead = this.tokenizer.getNextToken();
-        this.root = this.start();
+        //if the parser or tokenizer fails at any point, just send the user's raw text back to them
+        try {
+            this.lookahead = this.tokenizer.getNextToken();
+            this.root = this.start();
+        } catch (Exception e) {
+            TextNode text = new TextNode();
+            text.value = this.string.replaceAll("\n", "<br>");
+            text.children = null;
+
+            ParagraphNode paragraph = new ParagraphNode();
+            ArrayList<PhrasingContent> paragraphChildren = new ArrayList<>();
+            paragraphChildren.add(text);
+            paragraph.setChildren(paragraphChildren);
+
+            RootNode root = new RootNode();
+            ArrayList<FlowContent> rootChildren = new ArrayList<>();
+            rootChildren.add(paragraph);
+            root.setChildren(rootChildren);
+
+            this.root = root;
+        }
     }
 
     /** actual parser recursive logic */
-    private RootNode start() {
+    private RootNode start() throws Exception {
         RootNode root = new RootNode();
         ArrayList<FlowContent> contents = new ArrayList<>();
         while (this.lookahead != null) {
@@ -208,7 +227,7 @@ public class Parser {
         return root;
     }
 
-    private FlowContent content() {
+    private FlowContent content() throws Exception {
         switch (this.lookahead.type) {
             case CODE_BLOCK:
                 return this.code();
@@ -219,7 +238,7 @@ public class Parser {
         }
     }
 
-    private ParagraphNode paragraph() {
+    private ParagraphNode paragraph() throws Exception {
         ParagraphNode paragraph = new ParagraphNode();
         ArrayList<PhrasingContent> contents = new ArrayList<>();
         while (
@@ -233,7 +252,7 @@ public class Parser {
         return paragraph;
     }
 
-    private HeaderNode header() {
+    private HeaderNode header() throws Exception {
         String value = this.eat(TokenType.HEADER).value;
         int depth = value.length();
 
@@ -250,7 +269,7 @@ public class Parser {
         return header;
     }
 
-    private CodeNode code() {
+    private CodeNode code() throws Exception {
         this.eat(TokenType.CODE_BLOCK);
         CodeNode code = new CodeNode();
         ArrayList<PhrasingContent> contents = new ArrayList<>();
@@ -266,7 +285,7 @@ public class Parser {
         return code;
     }
 
-    private PhrasingContent phrasingContent() {
+    private PhrasingContent phrasingContent() throws Exception {
         switch (this.lookahead.type) {
             case BREAK:
                 //code blocks naturally create visual breaks, don't need to manually insert any so we discard user breaks
@@ -290,7 +309,7 @@ public class Parser {
         }
     }
 
-    private TextNode br() {
+    private TextNode br() throws Exception {
         this.eat(TokenType.BREAK);
         TextNode text = new TextNode();
         text.value = "<br>";
@@ -299,14 +318,14 @@ public class Parser {
     }
 
     /** reminder for myself to put while loop since multiple text tokens can happen */
-    private TextNode text() {
+    private TextNode text() throws Exception {
         TextNode text = new TextNode();
         text.value = this.eat(TokenType.TEXT).value;
         text.children = null;
         return text;
     }
 
-    private StrongNode strong() {
+    private StrongNode strong() throws Exception {
         this.eat(TokenType.BOLD);
         StrongNode node = new StrongNode();
         ArrayList<PhrasingContent> contents = new ArrayList<>();
@@ -324,7 +343,7 @@ public class Parser {
         return node;
     }
 
-    private EmphasisNode emphasis() {
+    private EmphasisNode emphasis() throws Exception {
         this.eat(TokenType.ITALICS);
         EmphasisNode node = new EmphasisNode();
         ArrayList<PhrasingContent> contents = new ArrayList<>();
@@ -341,7 +360,7 @@ public class Parser {
         return node;
     }
 
-    private StrikeNode strikethrough() {
+    private StrikeNode strikethrough() throws Exception {
         this.eat(TokenType.STRIKETHROUGH);
         StrikeNode node = new StrikeNode();
         ArrayList<PhrasingContent> contents = new ArrayList<>();
@@ -357,7 +376,7 @@ public class Parser {
         return node;
     }
 
-    private MarkNode mark() {
+    private MarkNode mark() throws Exception {
         this.eat(TokenType.HIGHLIGHT);
         MarkNode node = new MarkNode();
         ArrayList<PhrasingContent> contents = new ArrayList<>();
@@ -379,7 +398,8 @@ public class Parser {
 
     public static void main(String[] args) {
         // Parser parser = new Parser("```\nhey```");
-        Parser parser = new Parser("```hi```");
+        // Parser parser = new Parser("```hi```");
+        Parser parser = new Parser("* hi\n* lol");
         parser.parse();
 
         System.out.println(PrintTree.printParseTree(parser.root));
