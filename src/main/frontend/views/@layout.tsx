@@ -38,7 +38,7 @@ export default function MainLayout() {
   const location = useLocation();
 
   const [enabled, setEnabled] = useState(false);
-  const WEBSOCKET_URL = "ws://localhost:8080/create-ws-connection";
+  const WEBSOCKET_URL = "ws://" + window.location.host + "/create-ws-connection";
 
   // useEffect(() => {
   //   vaadin.documentTitleSignal.value = currentTitle;

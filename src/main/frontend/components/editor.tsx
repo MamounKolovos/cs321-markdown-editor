@@ -1,6 +1,6 @@
 import { Button } from "@vaadin/react-components";
 import React, { useRef, useState, useEffect } from "react";
-import { useSubscription, useStompClient } from "react-stomp-hooks";
+import { useSubscription, useStompClient, IMessage, StompHeaders } from "react-stomp-hooks";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBold, faItalic, faStrikethrough, faHighlighter, faCode, faTimes, faArrowLeft, faBars } from '@fortawesome/free-solid-svg-icons';
 
@@ -82,9 +82,34 @@ export default function Editor() {
 		}
 
 		getUserId();
-
-		// request the current text and then update the text box accordingly
 	}, []);
+
+	useEffect(() => {
+		if (userId === null) {
+			return;
+		}
+
+		const getInitialText = async (userId: number) => {
+			if (!editorRef.current) {
+				console.error("editor reference is NULL!!");
+				return;
+			}
+
+			const response = await PresenceManager.getInitialText(userId);
+
+			if (!response || !response.original || !response.html) {	// guard against invalid response
+				console.error("Unable to get initial text + parser response from PresenceManager!!");
+				return;
+			}
+
+			setText(response.original.content!);
+			setHtml(response.html);
+
+			editorRef.current.value = response.original.content || "";
+		}
+
+		getInitialText(userId);
+	}, [userId]);	// only run this when userId gets set... should be on the first connect
 
 	const editor = (
 		<textarea
@@ -119,8 +144,6 @@ export default function Editor() {
 			body: content
 		});
 	}
-
-    
 
     const wrapSelection = (style: Style) => () => {
         if (!editorRef.current) return;
