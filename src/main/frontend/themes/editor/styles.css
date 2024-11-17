@@ -2,6 +2,14 @@
     padding: 0;
 }
 
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Keeps scroll from showing empty space */
+}
+
 /* Header bar */
 .header-bar {
     position: fixed;
@@ -52,10 +60,12 @@
     width: 50%; 
 	height: 100%;
     resize: none;
-    box-sizing: border-box; 
+    box-sizing: border-box;
     overflow-y: auto;
     border-top: none;
     border-bottom: none;
+    padding-left: 5px;
+    font-size: 20px;
 }
 
 /* HTML render pane styles */
@@ -64,10 +74,14 @@
 	height: 100%;
 	word-wrap: break-word;
 	overflow-y: auto;
+    font-size: 20px;
+    box-sizing: border-box; 
+    background-color:#f0f2f5;
 }
 
 .html-render p {
     margin: 0;
+    padding-left: 5px;
 }
 
 /* Sidebar styles */
