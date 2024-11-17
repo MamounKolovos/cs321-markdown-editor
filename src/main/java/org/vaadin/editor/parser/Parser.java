@@ -81,6 +81,33 @@ class ParagraphNode extends FlowContent {
     }
 }
 
+final class CodeNode extends FlowContent{
+    String type = "code";
+    String tagName = "code";
+
+    String getType() {
+        return this.type;
+    }
+
+    String getTagName() {
+        return this.tagName;
+    }
+}
+
+final class HeaderNode extends FlowContent{
+    String type = "header";
+    String tagName = "h";
+    int depth;
+
+    String getType() {
+        return this.type;
+    }
+
+    String getTagName() {
+        return this.tagName + Integer.toString(depth);
+    }
+}
+
 final class StrongNode extends PhrasingContent{
     String type = "strong";
     String tagName = "strong";
@@ -139,6 +166,7 @@ public class Parser {
     String string;
     Tokenizer tokenizer;
     RootNode root;
+    private Token lastToken;
     private Token lookahead;
 
     public Parser(String string) {
@@ -146,48 +174,77 @@ public class Parser {
         this.tokenizer = new Tokenizer(string);
     }
 
-    private Token eat(TokenType type) {
+    private Token eat(TokenType type) throws Exception {
         Token token = this.lookahead;
 
         if (token == null) {
-            throw new Error("tried to eat null lookahead");
+            throw new Exception("tried to eat null lookahead");
         }
 
         if (token.type != type) {
-            throw new Error(String.format("types do not match: %s != %s", token.type, type));
+            throw new Exception(String.format("types do not match: %s != %s", token.type, type));
         }
 
+        this.lastToken = this.lookahead;
         this.lookahead = this.tokenizer.getNextToken();
         return token;
     }
 
     /** public entry point for parser */
     public void parse() {
-        this.lookahead = this.tokenizer.getNextToken();
-        this.root = this.start();
+        //if the parser or tokenizer fails at any point, just send the user's raw text back to them
+        try {
+            this.lookahead = this.tokenizer.getNextToken();
+            this.root = this.start();
+        } catch (Exception e) {
+            TextNode text = new TextNode();
+            text.value = this.string.replaceAll("\n", "<br>");
+            text.children = null;
+
+            ParagraphNode paragraph = new ParagraphNode();
+            ArrayList<PhrasingContent> paragraphChildren = new ArrayList<>();
+            paragraphChildren.add(text);
+            paragraph.setChildren(paragraphChildren);
+
+            RootNode root = new RootNode();
+            ArrayList<FlowContent> rootChildren = new ArrayList<>();
+            rootChildren.add(paragraph);
+            root.setChildren(rootChildren);
+
+            this.root = root;
+        }
     }
 
     /** actual parser recursive logic */
-    private RootNode start() {
+    private RootNode start() throws Exception {
         RootNode root = new RootNode();
         ArrayList<FlowContent> contents = new ArrayList<>();
         while (this.lookahead != null) {
             FlowContent content = this.content();
             contents.add(content);
         }
-        // root.children = contents;
         root.setChildren(contents);
         return root;
     }
 
-    private FlowContent content() {
+    private FlowContent content() throws Exception {
+        switch (this.lookahead.type) {
+            case CODE_BLOCK:
+                return this.code();
+            case HEADER:
+                return this.header();
+            default: 
+                return this.paragraph();
+        }
+    }
+
+    private ParagraphNode paragraph() throws Exception {
         ParagraphNode paragraph = new ParagraphNode();
         ArrayList<PhrasingContent> contents = new ArrayList<>();
-        while (this.lookahead != null) {
-            if (this.lookahead.type == TokenType.BREAK) {
-                this.eat(TokenType.BREAK);
-                break;
-            }
+        while (
+            this.lookahead != null && 
+            (this.lookahead.type != TokenType.CODE_BLOCK && this.lookahead.type != TokenType.HEADER)
+        ) {
             PhrasingContent content = this.phrasingContent();
             contents.add(content);
         }
@@ -195,8 +252,48 @@ public class Parser {
         return paragraph;
     }
 
-    private PhrasingContent phrasingContent() {
+    private HeaderNode header() throws Exception {
+        String value = this.eat(TokenType.HEADER).value;
+        int depth = value.length();
+
+        HeaderNode header = new HeaderNode();
+        header.depth = depth;
+        ArrayList<PhrasingContent> contents = new ArrayList<>();
+        while (
+            this.lookahead != null && this.lookahead.type != TokenType.BREAK
+        ) {
+            PhrasingContent content = this.phrasingContent();
+            contents.add(content);
+        }
+        header.children = contents;
+        return header;
+    }
+
+    private CodeNode code() throws Exception {
+        this.eat(TokenType.CODE_BLOCK);
+        CodeNode code = new CodeNode();
+        ArrayList<PhrasingContent> contents = new ArrayList<>();
+        while (
+            this.lookahead != null && 
+            (this.lookahead.type != TokenType.CODE_BLOCK || this.lookahead.actionType != ActionType.CLOSE)
+        ) {
+            PhrasingContent content = this.phrasingContent();
+            contents.add(content);
+        }
+        code.children = contents;
+        this.eat(TokenType.CODE_BLOCK);
+        return code;
+    }
+
+    private PhrasingContent phrasingContent() throws Exception {
         switch (this.lookahead.type) {
+            case BREAK:
+                //code blocks naturally create visual breaks, don't need to manually insert any so we discard user breaks
+                if (lastToken != null && lastToken.type == TokenType.CODE_BLOCK) {
+                    this.eat(TokenType.BREAK);
+                    return this.phrasingContent();
+                }
+                return this.br();
             case TEXT:
                 return this.text();
             case BOLD:
@@ -212,15 +309,23 @@ public class Parser {
         }
     }
 
+    private TextNode br() throws Exception {
+        this.eat(TokenType.BREAK);
+        TextNode text = new TextNode();
+        text.value = "<br>";
+        text.children = null;
+        return text;
+    }
+
     /** reminder for myself to put while loop since multiple text tokens can happen */
-    private TextNode text() {
+    private TextNode text() throws Exception {
         TextNode text = new TextNode();
         text.value = this.eat(TokenType.TEXT).value;
         text.children = null;
         return text;
     }
 
-    private StrongNode strong() {
+    private StrongNode strong() throws Exception {
         this.eat(TokenType.BOLD);
         StrongNode node = new StrongNode();
         ArrayList<PhrasingContent> contents = new ArrayList<>();
@@ -238,7 +343,7 @@ public class Parser {
         return node;
     }
 
-    private EmphasisNode emphasis() {
+    private EmphasisNode emphasis() throws Exception {
         this.eat(TokenType.ITALICS);
         EmphasisNode node = new EmphasisNode();
         ArrayList<PhrasingContent> contents = new ArrayList<>();
@@ -255,7 +360,7 @@ public class Parser {
         return node;
     }
 
-    private StrikeNode strikethrough() {
+    private StrikeNode strikethrough() throws Exception {
         this.eat(TokenType.STRIKETHROUGH);
         StrikeNode node = new StrikeNode();
         ArrayList<PhrasingContent> contents = new ArrayList<>();
@@ -271,7 +376,7 @@ public class Parser {
         return node;
     }
 
-    private MarkNode mark() {
+    private MarkNode mark() throws Exception {
         this.eat(TokenType.HIGHLIGHT);
         MarkNode node = new MarkNode();
         ArrayList<PhrasingContent> contents = new ArrayList<>();
@@ -292,7 +397,9 @@ public class Parser {
     }
 
     public static void main(String[] args) {
-        Parser parser = new Parser("ok\nhi");
+        // Parser parser = new Parser("```\nhey```");
+        // Parser parser = new Parser("```hi```");
+        Parser parser = new Parser("* hi\n* lol");
         parser.parse();
 
         System.out.println(PrintTree.printParseTree(parser.root));
@@ -316,13 +423,15 @@ class Converter {
         return sb.toString();
     }
     
-    private static <T extends Node<?>> void convertParseTree(Node<T> node, int indent,
-            StringBuilder sb) {
-        sb.append(getIndentString(indent));
-        sb.append("<");
-        sb.append(node.getTagName());
-        sb.append(">");
-        sb.append("\n");
+    private static <T extends Node<?>> void convertParseTree(Node<T> node, int indent, StringBuilder sb) {
+        
+        if (node.getTagName() == "code") {
+            printTag("pre", indent, "OPEN", sb);
+            printTag(node.getTagName(), indent, "OPEN", sb);
+        } else {
+            printTag(node.getTagName(), indent, "OPEN", sb);
+        }
+
         for (T child : node.children) {
             if (child instanceof TextNode) {
                 printNode(child, indent + 1, sb);
@@ -331,26 +440,36 @@ class Converter {
             }
         }
 
-        sb.append(getIndentString(indent));
-        sb.append("</");
-        sb.append(node.getTagName());
+        if (node.getTagName() == "code") {
+            printTag(node.getTagName(), indent, "CLOSE", sb);
+            printTag("pre", indent, "CLOSE", sb);
+        } else {
+            printTag(node.getTagName(), indent, "CLOSE", sb);
+        }
+    }
+
+    private static <T extends Node<?>> void printTag(String tagName, int indent, String type, StringBuilder sb) {
+        String typeStr = type == "OPEN" ? "<" : "</";
+        // sb.append(getIndentString(indent));
+        sb.append(typeStr);
+        sb.append(tagName);
         sb.append(">");
-        sb.append("\n");
+        // sb.append("\n");
     }
     
     private static <T extends Node<?>> void printNode(Node<T> node, int indent, StringBuilder sb) {
-        sb.append(getIndentString(indent));
+        // sb.append(getIndentString(indent));
         sb.append(((TextNode)node).value);
-        sb.append("\n");
+        // sb.append("\n");
     }
     
-    private static String getIndentString(int indent) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < indent; i++) {
-            sb.append("  ");
-        }
-        return sb.toString();
-    }
+    // private static String getIndentString(int indent) {
+    //     StringBuilder sb = new StringBuilder();
+    //     for (int i = 0; i < indent; i++) {
+    //         sb.append("  ");
+    //     }
+    //     return sb.toString();
+    // }
 }
 
 
