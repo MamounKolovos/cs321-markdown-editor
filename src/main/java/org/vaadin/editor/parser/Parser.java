@@ -81,6 +81,19 @@ class ParagraphNode extends FlowContent {
     }
 }
 
+final class CodeNode extends FlowContent{
+    String type = "code";
+    String tagName = "code";
+
+    String getType() {
+        return this.type;
+    }
+
+    String getTagName() {
+        return this.tagName;
+    }
+}
+
 final class StrongNode extends PhrasingContent{
     String type = "strong";
     String tagName = "strong";
@@ -139,6 +152,7 @@ public class Parser {
     String string;
     Tokenizer tokenizer;
     RootNode root;
+    private Token lastToken;
     private Token lookahead;
 
     public Parser(String string) {
@@ -157,6 +171,7 @@ public class Parser {
             throw new Error(String.format("types do not match: %s != %s", token.type, type));
         }
 
+        this.lastToken = this.lookahead;
         this.lookahead = this.tokenizer.getNextToken();
         return token;
     }
@@ -181,13 +196,18 @@ public class Parser {
     }
 
     private FlowContent content() {
+        switch (this.lookahead.type) {
+            case CODE_BLOCK:
+                return this.code();
+            default: 
+                return this.paragraph();
+        }
+    }
+
+    private ParagraphNode paragraph() {
         ParagraphNode paragraph = new ParagraphNode();
         ArrayList<PhrasingContent> contents = new ArrayList<>();
         while (this.lookahead != null) {
-            if (this.lookahead.type == TokenType.BREAK) {
-                this.eat(TokenType.BREAK);
-                break;
-            }
             PhrasingContent content = this.phrasingContent();
             contents.add(content);
         }
@@ -195,8 +215,31 @@ public class Parser {
         return paragraph;
     }
 
+    private CodeNode code() {
+        this.eat(TokenType.CODE_BLOCK);
+        CodeNode code = new CodeNode();
+        ArrayList<PhrasingContent> contents = new ArrayList<>();
+        while (
+            this.lookahead != null && 
+            (this.lookahead.type != TokenType.CODE_BLOCK || this.lookahead.actionType != ActionType.CLOSE)
+        ) {
+            PhrasingContent content = this.phrasingContent();
+            contents.add(content);
+        }
+        code.children = contents;
+        this.eat(TokenType.CODE_BLOCK);
+        return code;
+    }
+
     private PhrasingContent phrasingContent() {
         switch (this.lookahead.type) {
+            case BREAK:
+                //code blocks naturally create visual breaks, don't need to manually insert any so we discard user breaks
+                if (lastToken != null && lastToken.type == TokenType.CODE_BLOCK) {
+                    this.eat(TokenType.BREAK);
+                    return this.phrasingContent();
+                }
+                return this.br();
             case TEXT:
                 return this.text();
             case BOLD:
@@ -210,6 +253,14 @@ public class Parser {
             default:
                 throw new Error("token is not handled yet");
         }
+    }
+
+    private TextNode br() {
+        this.eat(TokenType.BREAK);
+        TextNode text = new TextNode();
+        text.value = "<br>";
+        text.children = null;
+        return text;
     }
 
     /** reminder for myself to put while loop since multiple text tokens can happen */
@@ -292,7 +343,8 @@ public class Parser {
     }
 
     public static void main(String[] args) {
-        Parser parser = new Parser("ok\nhi");
+        // Parser parser = new Parser("```\nhey```");
+        Parser parser = new Parser("```hi```");
         parser.parse();
 
         System.out.println(PrintTree.printParseTree(parser.root));
@@ -316,13 +368,15 @@ class Converter {
         return sb.toString();
     }
     
-    private static <T extends Node<?>> void convertParseTree(Node<T> node, int indent,
-            StringBuilder sb) {
-        sb.append(getIndentString(indent));
-        sb.append("<");
-        sb.append(node.getTagName());
-        sb.append(">");
-        sb.append("\n");
+    private static <T extends Node<?>> void convertParseTree(Node<T> node, int indent, StringBuilder sb) {
+        
+        if (node.getTagName() == "code") {
+            printTag("pre", indent, "OPEN", sb);
+            printTag(node.getTagName(), indent, "OPEN", sb);
+        } else {
+            printTag(node.getTagName(), indent, "OPEN", sb);
+        }
+
         for (T child : node.children) {
             if (child instanceof TextNode) {
                 printNode(child, indent + 1, sb);
@@ -331,26 +385,36 @@ class Converter {
             }
         }
 
-        sb.append(getIndentString(indent));
-        sb.append("</");
-        sb.append(node.getTagName());
+        if (node.getTagName() == "code") {
+            printTag(node.getTagName(), indent, "CLOSE", sb);
+            printTag("pre", indent, "CLOSE", sb);
+        } else {
+            printTag(node.getTagName(), indent, "CLOSE", sb);
+        }
+    }
+
+    private static <T extends Node<?>> void printTag(String tagName, int indent, String type, StringBuilder sb) {
+        String typeStr = type == "OPEN" ? "<" : "</";
+        // sb.append(getIndentString(indent));
+        sb.append(typeStr);
+        sb.append(tagName);
         sb.append(">");
-        sb.append("\n");
+        // sb.append("\n");
     }
     
     private static <T extends Node<?>> void printNode(Node<T> node, int indent, StringBuilder sb) {
-        sb.append(getIndentString(indent));
+        // sb.append(getIndentString(indent));
         sb.append(((TextNode)node).value);
-        sb.append("\n");
+        // sb.append("\n");
     }
     
-    private static String getIndentString(int indent) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < indent; i++) {
-            sb.append("  ");
-        }
-        return sb.toString();
-    }
+    // private static String getIndentString(int indent) {
+    //     StringBuilder sb = new StringBuilder();
+    //     for (int i = 0; i < indent; i++) {
+    //         sb.append("  ");
+    //     }
+    //     return sb.toString();
+    // }
 }
 
 

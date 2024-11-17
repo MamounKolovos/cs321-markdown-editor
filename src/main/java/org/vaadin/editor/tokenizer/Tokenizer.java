@@ -27,7 +27,8 @@ final class TokenizerUtils {
                type == Character.INITIAL_QUOTE_PUNCTUATION ||
                type == Character.FINAL_QUOTE_PUNCTUATION ||
                type == Character.OTHER_PUNCTUATION ||
-               type == Character.MATH_SYMBOL;
+               type == Character.MATH_SYMBOL ||
+               type == Character.MODIFIER_SYMBOL;
     }
 
     // Method to check if a character is an ASCII punctuation character
@@ -43,7 +44,8 @@ final class TokenizerUtils {
             type == TokenType.ITALICS || 
             type == TokenType.BOLD ||
             type == TokenType.HIGHLIGHT ||
-            type == TokenType.STRIKETHROUGH;
+            type == TokenType.STRIKETHROUGH ||
+            type == TokenType.CODE_BLOCK;
     }
 
     public static TokenType getTokenType(String tokenValue) {
@@ -110,7 +112,7 @@ class DelimRun {
      * <p>a delimiter run symbol is the minimum number of characters needed to represent a token value</p>
      * <p>important to note that symbols are not directly associated with token types, the "*" symbol can be for both italics or bold</p>
      */
-    public final static String[] symbols = {"*", "_", "~~", "=="};
+    public final static String[] symbols = {"*", "_", "~~", "==", "```"};
 
     public String getTokenSymbol() {
         for (String s : DelimRun.symbols) {
@@ -158,7 +160,7 @@ public class Tokenizer {
     public Tokenizer(String string) {
         this.string = string;
 
-        Pattern textPattern = Pattern.compile("(_+|\\*+|~+|=+)");
+        Pattern textPattern = Pattern.compile("(_+|\\*+|~+|=+|`+)");
         Matcher matcher = textPattern.matcher(this.string);
         this.runs = matcher
             .results()
@@ -174,13 +176,28 @@ public class Tokenizer {
 
                 //flank algorithms taken directly from commonmark spec
 
-                boolean isLeftFlanking = 
-                    !TokenizerUtils.isWhiteSpace(nextChar) && 
-                    (!TokenizerUtils.isUnicodePunctuation(nextChar) ? true : TokenizerUtils.isWhiteSpace(prevChar) || TokenizerUtils.isUnicodePunctuation(prevChar));
+                // boolean isLeftFlanking = 
+                //     !TokenizerUtils.isWhiteSpace(nextChar) && 
+                //     (!TokenizerUtils.isUnicodePunctuation(nextChar) ? true : TokenizerUtils.isWhiteSpace(prevChar) || TokenizerUtils.isUnicodePunctuation(prevChar));
+
+                boolean isLeftFlanking;
+                boolean isRightFlanking;
+                if (TokenType.CODE_BLOCK.contains(value)) { //custom case only for code blocks
+                    isLeftFlanking = TokenizerUtils.isWhiteSpace(prevChar) || TokenizerUtils.isUnicodePunctuation(prevChar);
+                    isRightFlanking = TokenizerUtils.isWhiteSpace(nextChar) || TokenizerUtils.isUnicodePunctuation(nextChar);
+                } else {
+                    isLeftFlanking = 
+                        !TokenizerUtils.isWhiteSpace(nextChar) && 
+                        (!TokenizerUtils.isUnicodePunctuation(nextChar) ? true : TokenizerUtils.isWhiteSpace(prevChar) || TokenizerUtils.isUnicodePunctuation(prevChar));
+
+                    isRightFlanking = 
+                        !TokenizerUtils.isWhiteSpace(prevChar) &&
+                        (!TokenizerUtils.isUnicodePunctuation(prevChar) ? true : TokenizerUtils.isWhiteSpace(nextChar) || TokenizerUtils.isUnicodePunctuation(nextChar));
+                }
                 
-                boolean isRightFlanking = 
-                    !TokenizerUtils.isWhiteSpace(prevChar) &&
-                    (!TokenizerUtils.isUnicodePunctuation(prevChar) ? true : TokenizerUtils.isWhiteSpace(nextChar) || TokenizerUtils.isUnicodePunctuation(nextChar));
+                // boolean isRightFlanking = 
+                //     !TokenizerUtils.isWhiteSpace(prevChar) &&
+                //     (!TokenizerUtils.isUnicodePunctuation(prevChar) ? true : TokenizerUtils.isWhiteSpace(nextChar) || TokenizerUtils.isUnicodePunctuation(nextChar));
 
                 if (isLeftFlanking && isRightFlanking) {
                     flankDir = FlankDirection.BOTH;
@@ -215,7 +232,8 @@ public class Tokenizer {
             if (
                 (symbol == null) ||
                 (symbol.equals("*") && run.length > 3) ||
-                ((symbol.equals("~~") || symbol.equals("==")) && run.length > 2)
+                ((symbol.equals("~~") || symbol.equals("==")) && run.length > 2) ||
+                (symbol.equals("```") && run.length > 3)
             ) {
                 return false;
             }
@@ -292,7 +310,7 @@ public class Tokenizer {
             }
             
             // if (!TokenizerUtils.isFormatToken(TokenizerUtils.getTokenType(String.valueOf(curChar)))) continue;
-            if (curChar != '*' && curChar != '_' && curChar != '~' && curChar != '=') continue;
+            if (curChar != '*' && curChar != '_' && curChar != '~' && curChar != '=' && curChar != '`') continue;
             // System.out.format("%d, %d\n", i, this.runs.get(runIdx).start);
             
             if (escapeCount % 2 != 0) {
@@ -371,7 +389,8 @@ public class Tokenizer {
                 curChar == '\n' ||
                 ((curChar == '*' || curChar == '_') && this.balanced && this.getRunAtPos(i) != null) ||
                 (curChar == '~' && this.balanced && this.getRunAtPos(i) != null) ||
-                (curChar == '=' && this.balanced && this.getRunAtPos(i) != null)
+                (curChar == '=' && this.balanced && this.getRunAtPos(i) != null) ||
+                (curChar == '`' && this.balanced && this.getRunAtPos(i) != null)
             ) break;
 
             slicePos++;
@@ -447,6 +466,30 @@ public class Tokenizer {
                     this.cursor += 1;
                 }
                 break;
+            case '`': {
+                DelimRun curRun = this.getCurDelimiterRun();
+                if (curRun == null) break;
+                if (this.getRunAtPos(this.cursor) == null) break;
+
+                if (this.balanced && !this.contextStack.empty() && curRun.actionType == ActionType.CLOSE) {
+                    String value = this.contextStack.peek();
+                    Token token = new Token(TokenizerUtils.getTokenType(value), value, ActionType.CLOSE);
+                    this.cursor += token.value.length();
+                    this.updateState(token.type, token.value, token.actionType);
+                    return token;
+                }
+
+                ArrayList<DelimRun> eqGroup = this.getRunEquivalenceGroup();
+                this.balanced = eqGroup != null;
+
+                if (this.balanced) {
+                    tokenType = TokenType.CODE_BLOCK;
+                    tokenValue = "```";
+                    actionType = ActionType.OPEN;
+                    this.cursor += 3;
+                }
+                break;
+            }
             case '=': {
                 DelimRun curRun = this.getCurDelimiterRun();
                 if (curRun == null) break;
@@ -598,7 +641,8 @@ public class Tokenizer {
         // Tokenizer tokenizer = new Tokenizer("1***");
         // Tokenizer tokenizer = new Tokenizer("0~~1~~2~~3~~4");
         // Tokenizer tokenizer = new Tokenizer("**hey *lol***");
-        Tokenizer tokenizer = new Tokenizer("hey\nhi");
+        // Tokenizer tokenizer = new Tokenizer("```test```");
+        Tokenizer tokenizer = new Tokenizer("```\nhey **whats up**\n```");
         // Tokenizer tokenizer = new Tokenizer("=~=~==ok~=~=~==");
         // Tokenizer tokenizer = new Tokenizer("1***2 ~~3~~");
         // Tokenizer tokenizer = new Tokenizer("**1 ****2 3**");
