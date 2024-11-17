@@ -398,6 +398,20 @@ public class Tokenizer {
         return this.slicedString.substring(0, slicePos);
     }
 
+    private String getHeaderTokenValue() {
+        int slicePos = 0;
+
+        for (int i = 0; i < this.slicedString.length(); i++) {
+            char curChar = this.slicedString.charAt(i);
+
+            if (curChar != '#') break;
+
+            slicePos++;
+        }
+        
+        return this.slicedString.substring(0, slicePos);
+    }
+
     public boolean hasMoreTokens() {
         return this.cursor != this.string.length();
     }
@@ -466,6 +480,20 @@ public class Tokenizer {
                     this.cursor += 1;
                 }
                 break;
+            case '#': {
+                String headerTokenValue = this.getHeaderTokenValue();
+                //headers can only be at the start of a line AND 6 or less characters long for h1 - h6
+                boolean isHeader = 
+                (this.cursor == 0 || this.string.charAt(this.cursor - 1) == '\n') &&
+                headerTokenValue.length() <= 6;
+
+                if (isHeader) {
+                    tokenType = TokenType.HEADER;
+                    tokenValue = headerTokenValue;
+                    this.cursor += tokenValue.length();
+                }
+                break;
+            }
             case '`': {
                 DelimRun curRun = this.getCurDelimiterRun();
                 if (curRun == null) break;
@@ -642,7 +670,8 @@ public class Tokenizer {
         // Tokenizer tokenizer = new Tokenizer("0~~1~~2~~3~~4");
         // Tokenizer tokenizer = new Tokenizer("**hey *lol***");
         // Tokenizer tokenizer = new Tokenizer("```test```");
-        Tokenizer tokenizer = new Tokenizer("```\nhey **whats up**\n```");
+        // Tokenizer tokenizer = new Tokenizer("```\nhey **whats up**\n```");
+        Tokenizer tokenizer = new Tokenizer("hi #\n#lol");
         // Tokenizer tokenizer = new Tokenizer("=~=~==ok~=~=~==");
         // Tokenizer tokenizer = new Tokenizer("1***2 ~~3~~");
         // Tokenizer tokenizer = new Tokenizer("**1 ****2 3**");

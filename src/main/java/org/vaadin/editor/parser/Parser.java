@@ -94,6 +94,20 @@ final class CodeNode extends FlowContent{
     }
 }
 
+final class HeaderNode extends FlowContent{
+    String type = "header";
+    String tagName = "h";
+    int depth;
+
+    String getType() {
+        return this.type;
+    }
+
+    String getTagName() {
+        return this.tagName + Integer.toString(depth);
+    }
+}
+
 final class StrongNode extends PhrasingContent{
     String type = "strong";
     String tagName = "strong";
@@ -190,7 +204,6 @@ public class Parser {
             FlowContent content = this.content();
             contents.add(content);
         }
-        // root.children = contents;
         root.setChildren(contents);
         return root;
     }
@@ -199,6 +212,8 @@ public class Parser {
         switch (this.lookahead.type) {
             case CODE_BLOCK:
                 return this.code();
+            case HEADER:
+                return this.header();
             default: 
                 return this.paragraph();
         }
@@ -207,12 +222,32 @@ public class Parser {
     private ParagraphNode paragraph() {
         ParagraphNode paragraph = new ParagraphNode();
         ArrayList<PhrasingContent> contents = new ArrayList<>();
-        while (this.lookahead != null) {
+        while (
+            this.lookahead != null && 
+            (this.lookahead.type != TokenType.CODE_BLOCK && this.lookahead.type != TokenType.HEADER)
+        ) {
             PhrasingContent content = this.phrasingContent();
             contents.add(content);
         }
         paragraph.children = contents;
         return paragraph;
+    }
+
+    private HeaderNode header() {
+        String value = this.eat(TokenType.HEADER).value;
+        int depth = value.length();
+
+        HeaderNode header = new HeaderNode();
+        header.depth = depth;
+        ArrayList<PhrasingContent> contents = new ArrayList<>();
+        while (
+            this.lookahead != null && this.lookahead.type != TokenType.BREAK
+        ) {
+            PhrasingContent content = this.phrasingContent();
+            contents.add(content);
+        }
+        header.children = contents;
+        return header;
     }
 
     private CodeNode code() {
