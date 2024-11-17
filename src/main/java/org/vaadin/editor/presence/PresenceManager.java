@@ -2,6 +2,10 @@ package org.vaadin.editor.presence;
 
 import java.util.HashSet;
 
+import org.vaadin.editor.models.ParserResponseMessage;
+import org.vaadin.editor.models.TextMessage;
+import org.vaadin.editor.parser.Parser;
+
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.BrowserCallable;
 
@@ -35,5 +39,16 @@ public class PresenceManager {
 
 	public int generateUserId() {
 		return PresenceManager.userCount;
+	}
+
+	public ParserResponseMessage getInitialText(int userId) {
+		String text = PresenceManager.getGlobalText();
+		System.out.println("user " + userId + " connected, sending text: '" + text + "'");
+		TextMessage message = new TextMessage(text, userId);
+		Parser parser = new Parser(text);
+		parser.parse();
+		ParserResponseMessage response = new ParserResponseMessage(message, parser.convertToHtml());
+
+		return response;
 	}
 }
