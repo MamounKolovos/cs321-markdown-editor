@@ -305,7 +305,7 @@ public class Parser {
             case HIGHLIGHT:
                 return this.mark();
             default:
-                throw new Error("token is not handled yet");
+                throw new Exception("token is not handled yet");
         }
     }
 
