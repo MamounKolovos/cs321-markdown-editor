@@ -85,6 +85,10 @@ export default function Editor() {
 	}, []);
 
 	useEffect(() => {
+		sendTextToServer(text);
+	}, [text]);
+
+	useEffect(() => {
 		if (userId === null) {
 			return;
 		}
@@ -119,7 +123,6 @@ export default function Editor() {
             placeholder="TYPE HERE!"
 			onChange={async (event) => {
                 handleTextChange(event.target.value);
-				sendTextToServer(event.target.value);
 			}}
 		/>
 	);
