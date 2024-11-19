@@ -355,6 +355,9 @@ export default function Editor() {
         setHtml('');  // reset the HTML state
     };
 
+	const exportDocument = () => {
+		window.print();
+	}
 
     return (
         <React.Fragment>
@@ -366,6 +369,9 @@ export default function Editor() {
                     <Button onClick={clearEditor} className="clear-button">
                         <b>Clear</b>
                     </Button>
+					<Button onClick={exportDocument} className="export-button">
+						<b>Export</b>
+					</Button>
                     <Button onClick={() => setSidebarOpen(!isSidebarOpen)} className="sidebar-button">
                         <FontAwesomeIcon icon={faBars} />
                     </Button>
