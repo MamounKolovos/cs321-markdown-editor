@@ -159,9 +159,7 @@ export default function Editor() {
         const newText = editor.value.slice(0, selectionStart) + styleValue + selectedText + styleValue + editor.value.slice(selectionEnd);
         editor.value = newText;
 
-        setText(newText);
         handleTextChange(newText);
-        sendTextToServer(newText);
 
         editor.focus();
         editor.setSelectionRange(selectionStart + styleValue.length, selectionEnd + styleValue.length);
