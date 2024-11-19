@@ -106,7 +106,7 @@ export default function Editor() {
 				return;
 			}
 
-			setText(response.original.content!);
+			handleTextChange(response.original.content!);
 			setHtml(response.html);
 
 			editorRef.current.value = response.original.content || "";
