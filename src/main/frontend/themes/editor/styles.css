@@ -164,29 +164,30 @@ html, body {
 
 
 @media print {
-	.text-editor,
-	.header-bar,
-	.sidebar {
-		visibility: hidden !important;
+	* {
+		margin: 0 !important;
+		padding: 0 !important;
 	}
 
+
 	.html-render {
-		margin: 1in;
-		width: 100%;
-		height: auto;
 		position: absolute;
 		left: 0;
 		top: 0;
-		page-break-after: avoid;
+		width: 100% !important;
+		font-size: 12pt;
+		overflow-y: visible !important;
+	}
+
+	.text-editor,
+	.sidebar,
+	.editor-footer,
+	.header-bar {
+		visibility: hidden;
 	}
 
 	@page {
 		size: auto;
-		margin: 0;
-	}
-
-	body {
-		margin: 0;
-		padding: 0;
+		margin: 0.5in;
 	}
 }
