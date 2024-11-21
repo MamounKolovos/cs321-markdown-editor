@@ -2,7 +2,7 @@ import { Button } from "@vaadin/react-components";
 import React, { useRef, useState, useEffect } from "react";
 import { useSubscription, useStompClient, IMessage, StompHeaders } from "react-stomp-hooks";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBold, faItalic, faStrikethrough, faHighlighter, faCode, faTimes, faArrowLeft, faBars } from '@fortawesome/free-solid-svg-icons';
+import { faBold, faItalic, faStrikethrough, faHighlighter, faCode, faTimes, faArrowLeft, faBars, faArrowRightFromFile, faEraser } from '@fortawesome/free-solid-svg-icons';
 
 import { PresenceManager } from "Frontend/generated/endpoints"
 
@@ -368,10 +368,10 @@ export default function Editor() {
                 </div>
                 <div className = "sidebar-button-container">
                     <Button onClick={clearEditor} className="clear-button">
-                        <b>Clear</b>
+                        <FontAwesomeIcon icon={faEraser} />
                     </Button>
 					<Button onClick={exportDocument} className="export-button">
-						<b>Export</b>
+                        <FontAwesomeIcon icon={faArrowRightFromFile} />
 					</Button>
                     <Button onClick={() => setSidebarOpen(!isSidebarOpen)} className="sidebar-button">
                         <FontAwesomeIcon icon={faBars} />

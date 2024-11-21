@@ -46,6 +46,7 @@ html, body {
     color: #007bff; 
     border: none;
     cursor: pointer;
+    font-size: 18px;
 }
 
 .main-view {
