@@ -57,6 +57,7 @@ export default function Editor() {
 	const [text, setText] = useState("");
 	const [html, setHtml] = useState("");
 	const [userId, setUserId] = useState<number | null>(null);
+	const [cursorOffset, setCursorOffset] = useState(0); // character that the cursor is on
 	const stompClient = useStompClient();
 
 
@@ -64,6 +65,7 @@ export default function Editor() {
 		const data = JSON.parse(message.body);
 		if (editorRef.current) {
 			editorRef.current.value = data.original.content
+			editorRef.current.selectionEnd = cursorOffset;
 			setHtml(data.html);
 		} else {
 			console.warn("editorRef.current is NULL!");
@@ -326,6 +328,8 @@ export default function Editor() {
     
             const columnNumber = lines[lines.length - 1].length + 1;
             setCursorColumn(columnNumber);
+
+			setCursorOffset(editorRef.current.selectionEnd);
         }
     };
 
