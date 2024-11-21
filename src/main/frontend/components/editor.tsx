@@ -85,6 +85,10 @@ export default function Editor() {
 	}, []);
 
 	useEffect(() => {
+		sendTextToServer(text);
+	}, [text]);
+
+	useEffect(() => {
 		if (userId === null) {
 			return;
 		}
@@ -102,7 +106,7 @@ export default function Editor() {
 				return;
 			}
 
-			setText(response.original.content!);
+			handleTextChange(response.original.content!);
 			setHtml(response.html);
 
 			editorRef.current.value = response.original.content || "";
@@ -119,7 +123,6 @@ export default function Editor() {
             placeholder="TYPE HERE!"
 			onChange={async (event) => {
                 handleTextChange(event.target.value);
-				sendTextToServer(event.target.value);
 			}}
 		/>
 	);
@@ -156,9 +159,7 @@ export default function Editor() {
         const newText = editor.value.slice(0, selectionStart) + styleValue + selectedText + styleValue + editor.value.slice(selectionEnd);
         editor.value = newText;
 
-        setText(newText);
         handleTextChange(newText);
-        sendTextToServer(newText);
 
         editor.focus();
         editor.setSelectionRange(selectionStart + styleValue.length, selectionEnd + styleValue.length);
@@ -355,6 +356,9 @@ export default function Editor() {
         setHtml('');  // reset the HTML state
     };
 
+	const exportDocument = () => {
+		window.print();
+	}
 
     return (
         <React.Fragment>
@@ -366,6 +370,9 @@ export default function Editor() {
                     <Button onClick={clearEditor} className="clear-button">
                         <b>Clear</b>
                     </Button>
+					<Button onClick={exportDocument} className="export-button">
+						<b>Export</b>
+					</Button>
                     <Button onClick={() => setSidebarOpen(!isSidebarOpen)} className="sidebar-button">
                         <FontAwesomeIcon icon={faBars} />
                     </Button>

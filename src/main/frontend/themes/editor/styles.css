@@ -41,7 +41,7 @@ html, body {
 }
 
 /* Style buttons */
-.style-button, .sidebar-button, .clear-button {
+.style-button, .sidebar-button, .clear-button, .export-button {
     background-color: white; 
     color: #007bff; 
     border: none;
