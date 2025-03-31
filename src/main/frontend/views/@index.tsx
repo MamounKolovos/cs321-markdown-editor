@@ -7,7 +7,7 @@ export const config: ViewConfig[] = [
 
 ];
 
-export default function DudesView() {
+export default function MarkdownEditorView() {
   const [name, setName] = useState("");
 
   return (
